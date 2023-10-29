@@ -154,7 +154,7 @@
     "dependencies": {
         "d3": "3.0.0",
         "fs-extra": "8.0.0",
-        "gremlin": "2.6.0",
+        "gremlin": "3.7.0",
         "socket.io": "1.7.3",
         "socket.io-client": "1.7.3",
         "vscode-azureextensionui": "0.33.0",
