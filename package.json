@@ -2,7 +2,7 @@
 	"name": "vscode-cosmosdbgraph",
 	"displayName": "Azure Cosmos DB Graph (deprecated)",
 	"version": "0.0.1",
-	"private": "false",
+	"private": false,
 	"description": "View Cosmos DB Graph databases in Azure.",
 	"homepage": "https://github.com/CodeEditorLand/CodeEditorLand#readme",
 	"bugs": {
