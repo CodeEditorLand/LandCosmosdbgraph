@@ -29,12 +29,12 @@ function gulp_installCosmosDBExtension(): Promise<void> | Stream {
 }
 
 exports["webpack-dev"] = gulp.series(prepareForWebpack, () =>
-	gulp_webpack("development")
+	gulp_webpack("development"),
 );
 exports["webpack-prod"] = gulp.series(prepareForWebpack, () =>
-	gulp_webpack("production")
+	gulp_webpack("production"),
 );
 exports.preTest = gulp.series(
 	gulp_installAzureAccount,
-	gulp_installCosmosDBExtension
+	gulp_installCosmosDBExtension,
 );

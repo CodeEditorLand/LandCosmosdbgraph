@@ -16,7 +16,7 @@ export class GraphViewServerSocket {
 
 	public onClientMessage(
 		event: ClientMessage,
-		listener: (...args) => unknown
+		listener: (...args) => unknown,
 	): void {
 		this._socket.on(event, listener);
 	}
