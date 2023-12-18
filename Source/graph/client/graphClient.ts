@@ -95,7 +95,7 @@ class SocketWrapper {
 
 	public onServerMessage(
 		message: ServerMessage | "connect" | "disconnect",
-		fn: Function
+		fn: Function,
 	): SocketIOClient.Emitter {
 		//use webview's onDidGetMessage
 		return this._socket.on(message, (...args: any[]) => {
@@ -148,7 +148,7 @@ export class GraphClient {
 		this.log(`Listening on port ${port}`);
 		// tslint:disable-next-line:no-http-string
 		this._socket = new SocketWrapper(
-			io.connect(`http://localhost:${port}`)
+			io.connect(`http://localhost:${port}`),
 		);
 
 		// setInterval(() => {
@@ -175,10 +175,10 @@ export class GraphClient {
 					return;
 				}
 
-				if (!pageState.errorMessage) {
-					this.showResults(pageState.results, viewSettings);
-				} else {
+				if (pageState.errorMessage) {
 					this.setStateError(pageState.errorMessage);
+				} else {
+					this.showResults(pageState.results, viewSettings);
 				}
 
 				if (pageState.view === "json") {
@@ -186,7 +186,7 @@ export class GraphClient {
 				} else {
 					this.selectGraphView();
 				}
-			}
+			},
 		);
 
 		this._socket.onServerMessage("setTitle", (title: string): void => {
@@ -199,7 +199,7 @@ export class GraphClient {
 			(
 				queryId: number,
 				results: GraphResults,
-				viewSettings: GraphViewSettings
+				viewSettings: GraphViewSettings,
 			): void => {
 				this.log(`Received results for query ${queryId}`);
 
@@ -208,7 +208,7 @@ export class GraphClient {
 				} else {
 					this.showResults(results, viewSettings);
 				}
-			}
+			},
 		);
 
 		this._socket.onServerMessage(
@@ -221,7 +221,7 @@ export class GraphClient {
 				} else {
 					this.setStateError(error);
 				}
-			}
+			},
 		);
 	}
 
@@ -273,15 +273,15 @@ export class GraphClient {
 		htmlElements.jsonRadio.checked = !this._isGraphView;
 		d3.select(htmlElements.graphSection).classed(
 			"active",
-			!!this._isGraphView
+			!!this._isGraphView,
 		);
 		d3.select(htmlElements.jsonSection).classed(
 			"active",
-			!this._isGraphView
+			!this._isGraphView,
 		);
 		this._socket.emitToHost(
 			"setView",
-			this._isGraphView ? "graph" : "json"
+			this._isGraphView ? "graph" : "json",
 		);
 	}
 
@@ -335,7 +335,7 @@ export class GraphClient {
 
 	private showResults(
 		results: GraphResults,
-		viewSettings: GraphViewSettings
+		viewSettings: GraphViewSettings,
 	): void {
 		// queryResults may contain any type of data, not just vertices or edges
 
@@ -343,23 +343,23 @@ export class GraphClient {
 		htmlElements.jsonResults.value = JSON.stringify(
 			results.fullResults,
 			null,
-			2
+			2,
 		);
 
 		if (Array.isArray(results.fullResults) && !results.fullResults.length) {
 			this._setState("empty-results");
-		} else if (!results.limitedVertices.length) {
-			// No vertices to show, just show query JSON
-			this._setState("json-results");
-		} else {
+		} else if (results.limitedVertices.length) {
 			this._setState("graph-results");
 			this._graphView.display(
 				results.countUniqueVertices,
 				results.limitedVertices,
 				results.countUniqueEdges,
 				results.limitedEdges,
-				viewSettings
+				viewSettings,
 			);
+		} else {
+			// No vertices to show, just show query JSON
+			this._setState("json-results");
 		}
 	}
 }
@@ -379,7 +379,7 @@ class GraphView {
 
 	private static calculateControlPoint(
 		start: Point2D,
-		end: Point2D
+		end: Point2D,
 	): Point2D {
 		const alpha = Math.atan2(end.y - start.y, end.x - start.x);
 		const n = Math.floor(alpha / (Math.PI / 2));
@@ -390,7 +390,7 @@ class GraphView {
 		const length =
 			Math.sqrt(
 				(end.y - start.y) * (end.y - start.y) +
-					(end.x - start.x) * (end.x - start.x)
+					(end.x - start.x) * (end.x - start.x),
 			) / 2;
 		return {
 			x: start.x + Math.cos(beta) * length,
@@ -404,14 +404,14 @@ class GraphView {
 		vertices: GraphVertex[],
 		countUniqueEdges: number,
 		edges: GraphEdge[],
-		viewSettings: GraphViewSettings
+		viewSettings: GraphViewSettings,
 	) {
 		this.clear();
 		this.generateDefaultColors(vertices);
 
 		// Set up nodes and links for the force simulation
 		const nodes: ForceNode[] = vertices.map(
-			(v) => <ForceNode>{ vertex: v }
+			(v) => <ForceNode>{ vertex: v },
 		);
 
 		// Create map of nodes by ID
@@ -483,7 +483,7 @@ class GraphView {
 		svg = svg
 			// tslint:disable-next-line:no-function-expression // Grandfathered in
 			.call(
-				d3.behavior.zoom().on("zoom", function () {
+				d3.behavior.zoom().on("zoom", () => {
 					svg.attr(
 						"transform",
 						"translate(" +
@@ -491,9 +491,9 @@ class GraphView {
 							")" +
 							" scale(" +
 							d3.event.scale +
-							")"
+							")",
 					);
-				})
+				}),
 			)
 			.append("g");
 
@@ -531,7 +531,7 @@ class GraphView {
 			.attr("y", "2px")
 			.attr("font-size", 13)
 			.text((d: ForceNode) =>
-				this.getVertexDisplayText(d.vertex, viewSettings)
+				this.getVertexDisplayText(d.vertex, viewSettings),
 			);
 		// Nodes last so that they're always and top to be able to be dragged
 		const vertex = svg
@@ -543,7 +543,7 @@ class GraphView {
 			.attr("cx", (d: ForceNode) => d.x)
 			.attr("cy", (d: ForceNode) => d.y)
 			.style("fill", (d: ForceNode) =>
-				this.getVertexColor(d.vertex, viewSettings)
+				this.getVertexColor(d.vertex, viewSettings),
 			)
 			.call(vertexDrag);
 		// On each tick of the simulation, update the positions of each vertex and edge
@@ -626,7 +626,7 @@ class GraphView {
 	private findVertexPropertySetting(
 		v: GraphVertex,
 		viewSettings: GraphViewSettings,
-		settingProperty: keyof VertexSettingsGroup
+		settingProperty: keyof VertexSettingsGroup,
 	): any | undefined {
 		const label = v.label;
 
@@ -659,7 +659,7 @@ class GraphView {
 
 	private getVertexColor(
 		v: GraphVertex,
-		viewSettings: GraphViewSettings
+		viewSettings: GraphViewSettings,
 	): string {
 		const color = this.findVertexPropertySetting(v, viewSettings, "color");
 		if (color && color !== AutoColor) {
@@ -672,14 +672,14 @@ class GraphView {
 
 	private getVertexDisplayText(
 		v: GraphVertex,
-		viewSettings: GraphViewSettings
+		viewSettings: GraphViewSettings,
 	): string {
 		let text: string;
 		const propertyCandidates =
 			this.findVertexPropertySetting(
 				v,
 				viewSettings,
-				"displayProperty"
+				"displayProperty",
 			) || [];
 		// Find the first specified property that exists and has a non-empty value
 		for (const candidate of propertyCandidates) {
@@ -687,13 +687,11 @@ class GraphView {
 				text = v.id;
 			} else if (candidate === "label" && v.label) {
 				text = v.label;
-			} else {
-				if (v.properties && candidate in v.properties) {
-					const property = v.properties[candidate][0];
-					if (property && property.value) {
-						text = property.value;
-						break;
-					}
+			} else if (v.properties && candidate in v.properties) {
+				const property = v.properties[candidate][0];
+				if (property && property.value) {
+					text = property.value;
+					break;
 				}
 			}
 		}
@@ -704,7 +702,7 @@ class GraphView {
 		let showLabel = this.findVertexPropertySetting(
 			v,
 			viewSettings,
-			"showLabel"
+			"showLabel",
 		);
 		showLabel = showLabel === undefined ? true : showLabel; // Default to true if not specified
 		if (showLabel && v.label) {

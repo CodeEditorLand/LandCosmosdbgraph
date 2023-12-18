@@ -5,10 +5,10 @@
 
 // tslint:disable:no-implicit-dependencies (this allows the use of dev dependencies)
 
-import * as fse from "fs-extra";
-import * as gulp from "gulp";
 import * as path from "path";
 import { Stream } from "stream";
+import * as fse from "fs-extra";
+import * as gulp from "gulp";
 import {
 	gulp_installAzureAccount,
 	gulp_installVSCodeExtension,
@@ -29,12 +29,12 @@ function gulp_installCosmosDBExtension(): Promise<void> | Stream {
 }
 
 exports["webpack-dev"] = gulp.series(prepareForWebpack, () =>
-	gulp_webpack("development")
+	gulp_webpack("development"),
 );
 exports["webpack-prod"] = gulp.series(prepareForWebpack, () =>
-	gulp_webpack("production")
+	gulp_webpack("production"),
 );
 exports.preTest = gulp.series(
 	gulp_installAzureAccount,
-	gulp_installCosmosDBExtension
+	gulp_installCosmosDBExtension,
 );
