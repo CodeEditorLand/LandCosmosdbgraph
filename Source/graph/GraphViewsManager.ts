@@ -54,12 +54,12 @@ export class GraphViewsManager implements IServerProvider {
 			this._panelViewType,
 			config.tabTitle,
 			{ viewColumn: column, preserveFocus: true },
-			options,
+			options
 		);
 		const contentProvider = new WebviewContentProvider(this);
 		panel.webview.html = await contentProvider.provideHtmlContent(
 			panel.webview,
-			id,
+			id
 		);
 		this._panels.set(id, panel);
 		panel.onDidDispose(
@@ -69,7 +69,7 @@ export class GraphViewsManager implements IServerProvider {
 				server.dispose();
 				this._servers.delete(id);
 				this._panels.delete(id);
-			},
+			}
 		);
 		panel.reveal();
 	}
@@ -79,7 +79,7 @@ export class GraphViewsManager implements IServerProvider {
 	}
 
 	private async getOrCreateServer(
-		config: IGraphConfiguration,
+		config: IGraphConfiguration
 	): Promise<number> {
 		let existingServer: GraphViewServer = null;
 		let existingId: number;
@@ -110,7 +110,7 @@ class WebviewContentProvider {
 
 	public async provideHtmlContent(
 		webview: vscode.Webview,
-		serverId: number,
+		serverId: number
 	): Promise<string> {
 		console.assert(serverId > 0);
 		const server = this._serverProvider.findServerById(serverId);
@@ -123,22 +123,22 @@ class WebviewContentProvider {
 
 	private async _graphClientHtmlAsString(
 		webview: vscode.Webview,
-		port: number,
+		port: number
 	): Promise<string> {
 		const graphClientAbsolutePath = path.join(
 			getResourcesPath(),
 			"graphClient",
-			"graphClient.html",
+			"graphClient.html"
 		);
 		let htmlContents: string = await fse.readFile(
 			graphClientAbsolutePath,
-			"utf8",
+			"utf8"
 		);
 		const portPlaceholder: RegExp = /\$CLIENTPORT/g;
 		htmlContents = htmlContents.replace(portPlaceholder, String(port));
 		const uriPlaceholder: RegExp = /\$BASEURI/g;
 		const baseUri = webview.asWebviewUri(
-			vscode.Uri.file(ext.context.extensionPath),
+			vscode.Uri.file(ext.context.extensionPath)
 		);
 		htmlContents = htmlContents.replace(uriPlaceholder, baseUri.toString());
 
@@ -148,7 +148,7 @@ class WebviewContentProvider {
 
 function areConfigsEqual(
 	config1: IGraphConfiguration,
-	config2: IGraphConfiguration,
+	config2: IGraphConfiguration
 ): boolean {
 	// Don't compare gremlin endpoints, documentEndpoint is enough to guarantee uniqueness
 	return (

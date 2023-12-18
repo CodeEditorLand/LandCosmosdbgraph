@@ -25,7 +25,7 @@ import { GraphViewsManager } from "./graph/GraphViewsManager";
 export async function activateInternal(
 	context: vscode.ExtensionContext,
 	perfStats: { loadStartTime: number; loadEndTime: number },
-	ignoreBundle?: boolean,
+	ignoreBundle?: boolean
 ): Promise<AzureExtensionApiProvider> {
 	ext.context = context;
 	ext.ignoreBundle = ignoreBundle;
@@ -33,7 +33,7 @@ export async function activateInternal(
 
 	ext.outputChannel = createAzExtOutputChannel(
 		"Azure Cosmos DB Graph",
-		ext.prefix,
+		ext.prefix
 	);
 	context.subscriptions.push(ext.outputChannel);
 	registerUIExtensionVariables(ext);
@@ -47,7 +47,7 @@ export async function activateInternal(
 				(perfStats.loadEndTime - perfStats.loadStartTime) / 1000;
 
 			ext.graphViewsManager = new GraphViewsManager();
-		},
+		}
 	);
 
 	return createApiProvider([

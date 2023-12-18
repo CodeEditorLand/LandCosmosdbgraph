@@ -115,10 +115,10 @@ export class GraphViewServer extends EventEmitter {
 								: this.configuration.documentEndpoint
 						}/${this._configuration.databaseName}/${
 							this._configuration.graphName
-						}`,
+						}`
 					);
 					resolve();
-				},
+				}
 			);
 			this._server = io(this._httpServer);
 
@@ -139,7 +139,7 @@ export class GraphViewServer extends EventEmitter {
 			1,
 			vscode.workspace
 				.getConfiguration()
-				.get<number>("cosmosDB.graph.maxVertices"),
+				.get<number>("cosmosDB.graph.maxVertices")
 		);
 	}
 
@@ -148,7 +148,7 @@ export class GraphViewServer extends EventEmitter {
 			1,
 			vscode.workspace
 				.getConfiguration()
-				.get<number>("cosmosDB.graph.maxEdges"),
+				.get<number>("cosmosDB.graph.maxEdges")
 		);
 	}
 
@@ -163,7 +163,7 @@ export class GraphViewServer extends EventEmitter {
 
 	private async queryAndShowResults(
 		queryId: number,
-		gremlinQuery: string,
+		gremlinQuery: string
 	): Promise<void> {
 		let results: GraphResults | undefined;
 		const start = Date.now();
@@ -195,7 +195,7 @@ export class GraphViewServer extends EventEmitter {
 					// Full query results - may contain vertices and/or edges and/or other things
 					const fullResults = await this.executeQuery(
 						queryId,
-						gremlinQuery,
+						gremlinQuery
 					);
 					context.telemetry.measurements.mainQueryDuration =
 						(Date.now() - start) / 1000;
@@ -222,7 +222,7 @@ export class GraphViewServer extends EventEmitter {
 							// If it returned any vertices, we need to also query for edges
 							const edges = await this.queryEdges(
 								queryId,
-								results.limitedVertices,
+								results.limitedVertices
 							);
 							const { countUniqueEdges, limitedEdges } =
 								this.limitEdges(limitedVertices, edges);
@@ -239,16 +239,16 @@ export class GraphViewServer extends EventEmitter {
 							throw new EdgeQueryError(
 								`Error querying for edges: ${
 									edgesError.message || edgesError
-								}`,
+								}`
 							);
 						}
 					}
-				},
+				}
 			);
 		} catch (error) {
 			// If there's an error, send it to the client to display
 			const message = this.removeErrorCallStack(
-				error.message || error.toString(),
+				error.message || error.toString()
 			);
 			this._pageState.errorMessage = message;
 			this._socket.emitToClient("showQueryError", queryId, message);
@@ -261,14 +261,14 @@ export class GraphViewServer extends EventEmitter {
 			"showResults",
 			queryId,
 			results,
-			this.getViewSettings(),
+			this.getViewSettings()
 		);
 	}
 
 	// tslint:disable-next-line:no-any
 	private getVertices(queryResults: any[]): GraphVertex[] {
 		return queryResults.filter(
-			(n) => n.type === "vertex" && typeof n.id === "string",
+			(n) => n.type === "vertex" && typeof n.id === "string"
 		);
 	}
 
@@ -286,7 +286,7 @@ export class GraphViewServer extends EventEmitter {
 
 	private limitEdges(
 		vertices: GraphVertex[],
-		edges: GraphEdge[],
+		edges: GraphEdge[]
 	): { countUniqueEdges: number; limitedEdges: GraphEdge[] } {
 		edges = removeDuplicatesById(edges);
 
@@ -307,7 +307,7 @@ export class GraphViewServer extends EventEmitter {
 
 	private async queryEdges(
 		queryId: number,
-		vertices: { id: string }[],
+		vertices: { id: string }[]
 	): Promise<GraphEdge[]> {
 		// Split into multiple queries because they fail if they're too large
 		// Each of the form: g.V("id1", "id2", ...).outE().dedup()
@@ -367,7 +367,7 @@ export class GraphViewServer extends EventEmitter {
 	// tslint:disable-next-line:no-any
 	private async executeQuery(
 		queryId: number,
-		gremlinQuery: string,
+		gremlinQuery: string
 	): Promise<any[]> {
 		const maxRetries = 3; // original try + this many extra tries
 		let iTry = 0;
@@ -381,7 +381,7 @@ export class GraphViewServer extends EventEmitter {
 					this.log(
 						`Retry #${
 							iTry - 1
-						} for query ${queryId}: ${truncateQuery(gremlinQuery)}`,
+						} for query ${queryId}: ${truncateQuery(gremlinQuery)}`
 					);
 				}
 				return await this._executeQueryCore(queryId, gremlinQuery);
@@ -390,8 +390,8 @@ export class GraphViewServer extends EventEmitter {
 					if (iTry >= maxRetries) {
 						this.log(
 							`Max retries reached for query ${queryId}: ${truncateQuery(
-								gremlinQuery,
-							)}`,
+								gremlinQuery
+							)}`
 						);
 					} else {
 						continue;
@@ -408,13 +408,13 @@ export class GraphViewServer extends EventEmitter {
 	// tslint:disable-next-line:no-any
 	private async _executeQueryCore(
 		queryId: number,
-		gremlinQuery: string,
+		gremlinQuery: string
 	): Promise<any[]> {
 		if (this.configuration.gremlinEndpoint) {
 			return this._executeQueryCoreForEndpoint(
 				queryId,
 				gremlinQuery,
-				this.configuration.gremlinEndpoint,
+				this.configuration.gremlinEndpoint
 			);
 		} else {
 			// We haven't figured out yet which endpoint actually works (if any - network could be down, etc.), so try them all
@@ -425,7 +425,7 @@ export class GraphViewServer extends EventEmitter {
 					const result = await this._executeQueryCoreForEndpoint(
 						queryId,
 						gremlinQuery,
-						endpoint,
+						endpoint
 					);
 					this.configuration.gremlinEndpoint = endpoint;
 					return Promise.resolve(result);
@@ -447,7 +447,7 @@ export class GraphViewServer extends EventEmitter {
 						this.configuration.graphName
 					}.\r\n\r\nTried ${this.configuration.possibleGremlinEndpoints
 						.map((e) => e.host)
-						.join(", ")}`,
+						.join(", ")}`
 				);
 			}
 		}
@@ -457,12 +457,12 @@ export class GraphViewServer extends EventEmitter {
 	private async _executeQueryCoreForEndpoint(
 		queryId: number,
 		gremlinQuery: string,
-		endpoint: IGremlinEndpoint,
+		endpoint: IGremlinEndpoint
 	): Promise<any[]> {
 		this.log(
 			`Executing query #${queryId} (${endpoint.host}:${
 				endpoint.port
-			}): ${truncateQuery(gremlinQuery)}`,
+			}): ${truncateQuery(gremlinQuery)}`
 		);
 
 		const client = gremlin.createClient(endpoint.port, endpoint.host, {
@@ -498,13 +498,13 @@ export class GraphViewServer extends EventEmitter {
 				if (socketError) {
 					this.log(
 						"Gremlin communication error: ",
-						socketError.message || socketError.toString(),
+						socketError.message || socketError.toString()
 					);
 					reject(socketError);
 				} else if (err) {
 					this.log(
 						"Error from gremlin server: ",
-						err.message || err.toString(),
+						err.message || err.toString()
 					);
 					reject(err);
 				} else {
@@ -545,7 +545,7 @@ export class GraphViewServer extends EventEmitter {
 			this._socket.emitToClient(
 				"setPageState",
 				this._pageState,
-				this.getViewSettings(),
+				this.getViewSettings()
 			);
 		}
 	}
@@ -562,7 +562,7 @@ export class GraphViewServer extends EventEmitter {
 
 	private handleQueryMessage(queryId: number, gremlinQuery: string) {
 		this.log(
-			`Query requested: queryId=${queryId}, gremlin="${gremlinQuery}"`,
+			`Query requested: queryId=${queryId}, gremlin="${gremlinQuery}"`
 		);
 
 		//tslint:disable-next-line:no-floating-promises
@@ -573,7 +573,7 @@ export class GraphViewServer extends EventEmitter {
 		this.log(`getTitle`);
 		this._socket.emitToClient(
 			"setTitle",
-			`${this._configuration.databaseName} / ${this._configuration.graphName}`,
+			`${this._configuration.databaseName} / ${this._configuration.graphName}`
 		);
 	}
 
@@ -585,29 +585,29 @@ export class GraphViewServer extends EventEmitter {
 
 		// Handle QueryTitle event from client
 		this._socket.onClientMessage("getTitle", () =>
-			this.handleGetTitleMessage(),
+			this.handleGetTitleMessage()
 		);
 
 		// Handle query event from client
 		this._socket.onClientMessage(
 			"query",
 			(queryId: number, gremlinQuery: string) =>
-				this.handleQueryMessage(queryId, gremlinQuery),
+				this.handleQueryMessage(queryId, gremlinQuery)
 		);
 
 		// Handle state event from client
 		this._socket.onClientMessage("getPageState", () =>
-			this.handleGetPageState(),
+			this.handleGetPageState()
 		);
 
 		// Handle setQuery event from client
 		this._socket.onClientMessage("setQuery", (query: string) =>
-			this.handleSetQuery(query),
+			this.handleSetQuery(query)
 		);
 
 		// Handle setView event from client
 		this._socket.onClientMessage("setView", (view: "graph" | "json") =>
-			this.handleSetView(view),
+			this.handleSetView(view)
 		);
 	}
 
