@@ -59,7 +59,7 @@ type State =
 	| "empty-results";
 
 window.onerror = (message) => {
-	logToUI("ERROR: " + message);
+	logToUI(`ERROR: ${message}`);
 };
 
 function getErrorMessage(error: any) {
@@ -112,7 +112,7 @@ class SocketWrapper {
 		message: ClientMessage,
 		...args: any[]
 	): SocketIOClient.Socket {
-		logToUI("Message to host: " + message + " " + args.join(", "));
+		logToUI(`Message to host: ${message} ${args.join(", ")}`);
 		return this._socket.emit(message, ...args);
 	}
 }
@@ -312,20 +312,24 @@ export class GraphClient {
 		let fullState: string;
 
 		switch (state) {
-			case "graph-results":
+			case "graph-results": {
 				fullState = "state-results state-graph-results";
 				break;
-			case "json-results":
+			}
+			case "json-results": {
 				fullState =
 					"state-results state-json-results state-non-graph-results";
 				break;
-			case "empty-results":
+			}
+			case "empty-results": {
 				fullState =
 					"state-results state-json-results state-empty-results";
 				break;
-			default:
+			}
+			default: {
 				fullState = `state-${state}`;
 				break;
+			}
 		}
 
 		// Sets the state name into a CSS class onto the "#states" element. This is then used by CSS to
@@ -486,12 +490,7 @@ class GraphView {
 				d3.behavior.zoom().on("zoom", () => {
 					svg.attr(
 						"transform",
-						"translate(" +
-							d3.event.translate +
-							")" +
-							" scale(" +
-							d3.event.scale +
-							")",
+						`translate(${d3.event.translate}) scale(${d3.event.scale})`,
 					);
 				}),
 			)
@@ -618,9 +617,7 @@ class GraphView {
 		const ux = l.target.x - Math.cos(angle) * radius;
 		const uy = l.target.y - Math.sin(angle) * radius;
 
-		return (
-			"M" + tx + "," + ty + "S" + d1.x + "," + d1.y + " " + ux + "," + uy
-		);
+		return `M${tx},${ty}S${d1.x},${d1.y} ${ux},${uy}`;
 	}
 
 	private findVertexPropertySetting(
@@ -689,7 +686,7 @@ class GraphView {
 				text = v.label;
 			} else if (v.properties && candidate in v.properties) {
 				const property = v.properties[candidate][0];
-				if (property && property.value) {
+				if (property?.value) {
 					text = property.value;
 					break;
 				}

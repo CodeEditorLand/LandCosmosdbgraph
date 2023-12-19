@@ -328,7 +328,7 @@ export class GraphViewServer extends EventEmitter {
 				currentIdList = "";
 			}
 			currentIdList =
-				(currentIdList ? currentIdList + "," : currentIdList) +
+				(currentIdList ? `${currentIdList},` : currentIdList) +
 				vertexId;
 		}
 		if (currentIdList.length) {
@@ -570,7 +570,7 @@ export class GraphViewServer extends EventEmitter {
 	}
 
 	private handleGetTitleMessage() {
-		this.log(`getTitle`);
+		this.log("getTitle");
 		this._socket.emitToClient(
 			"setTitle",
 			`${this._configuration.databaseName} / ${this._configuration.graphName}`,
