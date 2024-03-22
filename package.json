@@ -1,13 +1,35 @@
 {
-	"activationEvents": [],
-	"aiKey": "AIF-d9b70cd4-b9f9-4d70-929b-a071c400b217",
-	"author": {
-		"email": "Hello@Playform.Cloud",
-		"name": "Playform",
-		"url": "https://playform.cloud"
-	},
+	"name": "vscode-cosmosdbgraph",
+	"displayName": "Azure Cosmos DB Graph (deprecated)",
+	"version": "0.0.1",
+	"private": false,
+	"description": "View Cosmos DB Graph databases in Azure.",
+	"homepage": "https://github.com/CodeEditorLand/Foundation#readme",
 	"bugs": {
 		"url": "https://github.com/CodeEditorLand/Foundation/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/CodeEditorLand/Foundation.git"
+	},
+	"license": "SEE LICENSE IN LICENSE",
+	"author": {
+		"name": "Playform",
+		"email": "Hello@Playform.Cloud",
+		"url": "https://playform.cloud"
+	},
+	"type": "module",
+	"main": "./main",
+	"scripts": {
+		"all": "npm i && npm run lint && npm test",
+		"build": "tsc",
+		"compile": "tsc -watch",
+		"package": "vsce package --githubBranch main",
+		"prepublishOnly": "TypeScriptESBuild 'Source/**/*.ts'",
+		"vscode:prepublish": "npm run webpack-prod",
+		"webpack": "npm run build && gulp webpack-dev",
+		"webpack-prod": "npm run build && gulp webpack-prod",
+		"webpack-profile": "webpack --profile --json --mode production > webpack-stats.json && echo Use http://webpack.github.io/analyse to analyze the stats"
 	},
 	"contributes": {
 		"commands": [],
@@ -93,6 +115,7 @@
 			"title": "Cosmos DB"
 		}
 	},
+	"activationEvents": [],
 	"dependencies": {
 		"d3": "^3.0.0",
 		"fs-extra": "^8.0.0",
@@ -102,7 +125,6 @@
 		"vscode-azureextensionui": "^0.33.0",
 		"vscode-nls": "^4.0.0"
 	},
-	"description": "View Cosmos DB Graph databases in Azure.",
 	"devDependencies": {
 		"@types/d3": "5.0.0",
 		"@types/fs-extra": "^8.0.0",
@@ -122,47 +144,25 @@
 		"ts-node": "^7.0.1",
 		"tslint-microsoft-contrib": "5.0.1",
 		"typescript": "^3.9.2",
-		"typescript-esbuild": "",
+		"typescript-esbuild": "0.4.5",
 		"vsce": "^1.81.1",
 		"vscode-azureextensiondev": "^0.4.0",
 		"vscode-test": "^1.3.0",
 		"webpack": "4.28.1",
 		"webpack-cli": "^3.1.2"
 	},
-	"displayName": "Azure Cosmos DB Graph (deprecated)",
 	"extensionDependencies": [
 		"ms-azuretools.vscode-cosmosdb",
 		"ms-vscode.azure-account"
 	],
+	"publishConfig": {
+		"access": "public"
+	},
+	"icon": "resources/cosmos.png",
 	"galleryBanner": {
 		"color": "#3c3c3c",
 		"theme": "dark"
 	},
-	"homepage": "https://github.com/CodeEditorLand/Foundation#readme",
-	"icon": "resources/cosmos.png",
-	"license": "SEE LICENSE IN LICENSE",
-	"main": "./main",
-	"name": "vscode-cosmosdbgraph",
 	"preview": true,
-	"private": false,
-	"publishConfig": {
-		"access": "public"
-	},
-	"repository": {
-		"type": "git",
-		"url": "git+https://github.com/CodeEditorLand/Foundation.git"
-	},
-	"scripts": {
-		"all": "npm i && npm run lint && npm test",
-		"build": "tsc",
-		"compile": "tsc -watch",
-		"package": "vsce package --githubBranch main",
-		"prepublishOnly": "TypeScriptESBuild 'Source/**/*.ts'",
-		"vscode:prepublish": "npm run webpack-prod",
-		"webpack": "npm run build && gulp webpack-dev",
-		"webpack-prod": "npm run build && gulp webpack-prod",
-		"webpack-profile": "webpack --profile --json --mode production > webpack-stats.json && echo Use http://webpack.github.io/analyse to analyze the stats"
-	},
-	"type": "module",
-	"version": "0.0.1"
+	"aiKey": "AIF-d9b70cd4-b9f9-4d70-929b-a071c400b217"
 }
