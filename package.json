@@ -4,29 +4,31 @@
 	"version": "0.0.1",
 	"private": false,
 	"description": "View Cosmos DB Graph databases in Azure.",
-	"homepage": "https://github.com/CodeEditorLand/Foundation#readme",
+	"keywords": [
+		"land"
+	],
+	"homepage": "HTTPS://GitHub.Com/CodeEditorLand/LandCosmosDBGraph#readme",
 	"bugs": {
-		"url": "https://github.com/CodeEditorLand/Foundation/issues"
+		"url": "HTTPS://GitHub.Com/CodeEditorLand/LandCosmosDBGraph/issues"
 	},
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/CodeEditorLand/Foundation.git"
+		"url": "git+HTTPS://github.com/CodeEditorLand/LandCosmosDBGraph.git"
 	},
 	"license": "SEE LICENSE IN LICENSE",
 	"author": {
-		"name": "Playform",
-		"email": "Hello@Playform.Cloud",
-		"url": "https://playform.cloud"
+		"name": "🌆 — Land —",
+		"email": "Land@PlayForm.Cloud",
+		"url": "HTTPS://Land.PlayForm.Cloud"
 	},
 	"type": "module",
 	"main": "./main",
 	"scripts": {
+		"Document": "Document 'Source/**/*.ts'",
 		"all": "npm i && npm run lint && npm test",
 		"build": "tsc",
 		"compile": "tsc -watch",
-		"package": "vsce package --githubBranch main",
-		"prepublishOnly": "TypeScriptESBuild 'Source/**/*.ts'",
-		"vscode:prepublish": "npm run webpack-prod",
+		"prepublishOnly": "Build 'Source/**/*.ts'",
 		"webpack": "npm run build && gulp webpack-dev",
 		"webpack-prod": "npm run build && gulp webpack-prod",
 		"webpack-profile": "webpack --profile --json --mode production > webpack-stats.json && echo Use http://webpack.github.io/analyse to analyze the stats"
@@ -117,39 +119,21 @@
 	},
 	"activationEvents": [],
 	"dependencies": {
-		"d3": "^3.0.0",
-		"fs-extra": "^8.0.0",
-		"gremlin": "^2.6.0",
-		"socket.io": "^1.7.3",
-		"socket.io-client": "^1.7.3",
-		"vscode-azureextensionui": "^0.33.0",
-		"vscode-nls": "^4.0.0"
+		"d3": "7.9.0",
+		"fs-extra": "11.2.0",
+		"gremlin": "3.7.2",
+		"socket.io": "4.7.5",
+		"socket.io-client": "4.7.5"
 	},
 	"devDependencies": {
-		"@types/d3": "5.0.0",
-		"@types/fs-extra": "^8.0.0",
-		"@types/gulp": "^4.0.6",
-		"@types/mocha": "^7.0.2",
-		"@types/node": "^12.0.0",
-		"@types/socket.io": "^1.4.32",
-		"@types/socket.io-client": "^1.4.32",
-		"@types/vscode": "1.40.0",
-		"copy-webpack-plugin": "^5.1.1",
-		"glob": "^7.1.6",
-		"gulp": "^4.0.0",
-		"mocha": "^7.1.2",
-		"mocha-junit-reporter": "^1.18.0",
-		"mocha-multi-reporters": "^1.1.7",
-		"string-replace-webpack-plugin": "^0.1.3",
-		"ts-node": "^7.0.1",
-		"tslint-microsoft-contrib": "5.0.1",
-		"typescript": "^3.9.2",
-		"typescript-esbuild": "0.4.5",
-		"vsce": "^1.81.1",
-		"vscode-azureextensiondev": "^0.4.0",
-		"vscode-test": "^1.3.0",
-		"webpack": "4.28.1",
-		"webpack-cli": "^3.1.2"
+		"@playform/build": "0.0.7",
+		"@playform/document": "0.0.6",
+		"@types/d3": "7.4.3",
+		"@types/fs-extra": "11.0.4",
+		"@types/node": "20.12.7",
+		"@types/socket.io": "3.0.1",
+		"@types/socket.io-client": "1.4.36",
+		"glob": "10.3.12"
 	},
 	"extensionDependencies": [
 		"ms-azuretools.vscode-cosmosdb",
