@@ -130,7 +130,7 @@
 		"@playform/document": "0.0.6",
 		"@types/d3": "7.4.3",
 		"@types/fs-extra": "11.0.4",
-		"@types/node": "20.12.7",
+		"@types/node": "20.12.10",
 		"@types/socket.io": "3.0.1",
 		"@types/socket.io-client": "1.4.36",
 		"glob": "10.3.12"
