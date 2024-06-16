@@ -1,167 +1,125 @@
 {
-    "name": "vscode-cosmosdbgraph",
-    "version": "0.1.2-alpha",
-    "aiKey": "AIF-d9b70cd4-b9f9-4d70-929b-a071c400b217",
-    "publisher": "ms-azuretools",
-    "displayName": "Azure Cosmos DB Graph (deprecated)",
-    "description": "View Cosmos DB Graph databases in Azure.",
-    "engines": {
-        "vscode": "^1.40.0"
-    },
-    "galleryBanner": {
-        "color": "#3c3c3c",
-        "theme": "dark"
-    },
-    "icon": "resources/cosmos.png",
-    "categories": [],
-    "keywords": [],
-    "preview": true,
-    "homepage": "https://github.com/microsoft/vscode-cosmosdbgraph/blob/main/README.md",
-    "bugs": {
-        "url": "https://github.com/microsoft/vscode-cosmosdbgraph/issues"
-    },
-    "license": "SEE LICENSE IN LICENSE.md",
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/microsoft/vscode-cosmosdbgraph"
-    },
-    "main": "./main",
-    "activationEvents": [],
-    "contributes": {
-        "commands": [],
-        "configuration": {
-            "title": "Cosmos DB",
-            "properties": {
-                "cosmosDB.graph.maxVertices": {
-                    "type": "integer",
-                    "default": 300,
-                    "description": "Set a limit for number of vertices displayed in a graph visualization"
-                },
-                "cosmosDB.graph.maxEdges": {
-                    "type": "integer",
-                    "default": 500,
-                    "description": "Set a limit for number of edges displayed in a graph visualization"
-                },
-                "cosmosDB.graph.viewSettings": {
-                    "type": "array",
-                    "description": "Settings for CosmosDB graph visualization.",
-                    "maxItems": 1,
-                    "items": {
-                        "type": "object",
-                        "description": "A group of view settings",
-                        "additionalProperties": false,
-                        "properties": {
-                            "vertexSettings": {
-                                "type": "array",
-                                "description": "Groups of vertex display settings",
-                                "items": {
-                                    "type": "object",
-                                    "additionalProperties": false,
-                                    "properties": {
-                                        "appliesToLabel": {
-                                            "type": "string",
-                                            "description": "Specify a label value to restrict this settings group to only vertices with that label."
-                                        },
-                                        "displayProperty": {
-                                            "type": "array",
-                                            "description": "The vertex property to display for the text. The first one found to have a non-empty value on the vertex is used. The default is the vertex id.",
-                                            "items": {
-                                                "type": "string"
-                                            }
-                                        },
-                                        "color": {
-                                            "type": "string",
-                                            "description": "The vertex color, either 'auto', a CSS color name or a CSS RGB value (e.g., '#0088FF')",
-                                            "pattern": "^(auto)|([a-zA-Z]+)|(#[0-9a-fA-F]{3})|(#[0-9a-fA-F]{6})$",
-                                            "default": "auto"
-                                        },
-                                        "showLabel": {
-                                            "type": "boolean",
-                                            "description": "If true, the label will be displayed along with the specified display property",
-                                            "default": true
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    "default": [
-                        {
-                            "vertexSettings": [
-                                {
-                                    "displayProperty": [
-                                        "name"
-                                    ],
-                                    "color": "auto",
-                                    "showLabel": true
-                                },
-                                {
-                                    "appliesToLabel": "person",
-                                    "displayProperty": [
-                                        "fullName",
-                                        "lastName",
-                                        "firstName",
-                                        "name"
-                                    ]
-                                }
-                            ]
-                        }
-                    ]
-                }
-            }
-        }
-    },
-    "scripts": {
-        "vscode:prepublish": "npm run webpack-prod",
-        "build": "tsc",
-        "compile": "tsc -watch",
-        "package": "vsce package --githubBranch main",
-        "lint": "tslint --project tsconfig.json -t verbose",
-        "lint-fix": "tslint --project tsconfig.json -t verbose --fix",
-        "pretest": "npm run webpack-prod && gulp preTest",
-        "test": "node ./out/test/runTest.js",
-        "webpack": "npm run build && gulp webpack-dev",
-        "webpack-prod": "npm run build && gulp webpack-prod",
-        "webpack-profile": "webpack --profile --json --mode production > webpack-stats.json && echo Use http://webpack.github.io/analyse to analyze the stats",
-        "all": "npm i && npm run lint && npm test"
-    },
-    "devDependencies": {
-        "@types/d3": "5.0.0",
-        "@types/fs-extra": "^8.0.0",
-        "@types/gulp": "^4.0.6",
-        "@types/mocha": "^7.0.2",
-        "@types/node": "^12.0.0",
-        "@types/socket.io": "^1.4.32",
-        "@types/socket.io-client": "^1.4.32",
-        "@types/vscode": "1.40.0",
-        "copy-webpack-plugin": "^5.1.1",
-        "glob": "^7.1.6",
-        "gulp": "^4.0.0",
-        "mocha": "^7.1.2",
-        "mocha-junit-reporter": "^1.18.0",
-        "mocha-multi-reporters": "^1.1.7",
-        "string-replace-webpack-plugin": "^0.1.3",
-        "ts-node": "^7.0.1",
-        "tslint": "^5.7.0",
-        "tslint-microsoft-contrib": "5.0.1",
-        "typescript": "^3.9.2",
-        "vsce": "^1.81.1",
-        "vscode-azureextensiondev": "^0.4.0",
-        "vscode-test": "^1.3.0",
-        "webpack": "4.28.1",
-        "webpack-cli": "^3.1.2"
-    },
-    "dependencies": {
-        "d3": "^3.0.0",
-        "fs-extra": "^8.0.0",
-        "gremlin": "^2.6.0",
-        "socket.io": "^1.7.3",
-        "socket.io-client": "^1.7.3",
-        "vscode-azureextensionui": "^0.33.0",
-        "vscode-nls": "^4.0.0"
-    },
-    "extensionDependencies": [
-        "ms-vscode.azure-account",
-        "ms-azuretools.vscode-cosmosdb"
-    ]
+	"name": "vscode-cosmosdbgraph",
+	"displayName": "Azure Cosmos DB Graph (deprecated)",
+	"description": "View Cosmos DB Graph databases in Azure.",
+	"main": "./main",
+	"scripts": {
+		"all": "npm i && npm run lint && npm test",
+		"build": "tsc",
+		"compile": "tsc -watch",
+		"webpack": "npm run build && gulp webpack-dev",
+		"webpack-prod": "npm run build && gulp webpack-prod",
+		"webpack-profile": "webpack --profile --json --mode production > webpack-stats.json && echo Use http://webpack.github.io/analyse to analyze the stats"
+	},
+	"contributes": {
+		"commands": [],
+		"configuration": {
+			"properties": {
+				"cosmosDB.graph.maxEdges": {
+					"default": 500,
+					"description": "Set a limit for number of edges displayed in a graph visualization",
+					"type": "integer"
+				},
+				"cosmosDB.graph.maxVertices": {
+					"default": 300,
+					"description": "Set a limit for number of vertices displayed in a graph visualization",
+					"type": "integer"
+				},
+				"cosmosDB.graph.viewSettings": {
+					"default": [
+						{
+							"vertexSettings": [
+								{
+									"color": "auto",
+									"displayProperty": [
+										"name"
+									],
+									"showLabel": true
+								},
+								{
+									"appliesToLabel": "person",
+									"displayProperty": [
+										"fullName",
+										"lastName",
+										"firstName",
+										"name"
+									]
+								}
+							]
+						}
+					],
+					"description": "Settings for CosmosDB graph visualization.",
+					"items": {
+						"additionalProperties": false,
+						"description": "A group of view settings",
+						"properties": {
+							"vertexSettings": {
+								"description": "Groups of vertex display settings",
+								"items": {
+									"additionalProperties": false,
+									"properties": {
+										"appliesToLabel": {
+											"description": "Specify a label value to restrict this settings group to only vertices with that label.",
+											"type": "string"
+										},
+										"color": {
+											"default": "auto",
+											"description": "The vertex color, either 'auto', a CSS color name or a CSS RGB value (e.g., '#0088FF')",
+											"pattern": "^(auto)|([a-zA-Z]+)|(#[0-9a-fA-F]{3})|(#[0-9a-fA-F]{6})$",
+											"type": "string"
+										},
+										"displayProperty": {
+											"description": "The vertex property to display for the text. The first one found to have a non-empty value on the vertex is used. The default is the vertex id.",
+											"items": {
+												"type": "string"
+											},
+											"type": "array"
+										},
+										"showLabel": {
+											"default": true,
+											"description": "If true, the label will be displayed along with the specified display property",
+											"type": "boolean"
+										}
+									},
+									"type": "object"
+								},
+								"type": "array"
+							}
+						},
+						"type": "object"
+					},
+					"maxItems": 1,
+					"type": "array"
+				}
+			},
+			"title": "Cosmos DB"
+		}
+	},
+	"activationEvents": [],
+	"dependencies": {
+		"d3": "^7.9.0",
+		"fs-extra": "^11.2.0",
+		"gremlin": "^3.7.2",
+		"socket.io": "^4.7.5",
+		"socket.io-client": "^4.7.5"
+	},
+	"devDependencies": {
+		"@types/d3": "7.4.3",
+		"@types/fs-extra": "^11.0.4",
+		"@types/node": "^20.14.2",
+		"@types/socket.io": "^3.0.1",
+		"@types/socket.io-client": "^1.4.36",
+		"glob": "^10.4.1"
+	},
+	"extensionDependencies": [
+		"ms-azuretools.vscode-cosmosdb",
+		"ms-vscode.azure-account"
+	],
+	"icon": "resources/cosmos.png",
+	"galleryBanner": {
+		"color": "#3c3c3c",
+		"theme": "dark"
+	},
+	"preview": true,
+	"aiKey": "AIF-d9b70cd4-b9f9-4d70-929b-a071c400b217"
 }
