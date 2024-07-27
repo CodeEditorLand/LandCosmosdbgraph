@@ -103,8 +103,8 @@
 	},
 	"displayName": "Azure Cosmos DB Graph (deprecated)",
 	"extensionDependencies": [
-		"ms-vscode.azure-account",
-		"ms-azuretools.vscode-cosmosdb"
+		"ms-azuretools.vscode-cosmosdb",
+		"ms-vscode.azure-account"
 	],
 	"galleryBanner": {
 		"color": "#3c3c3c",
