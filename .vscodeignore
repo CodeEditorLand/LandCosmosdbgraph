@@ -1,0 +1,26 @@
+# These files are excluded during vsce package
+.azure-pipelines/**
+.github/**
+.gitignore
+.travis.yml
+.vscode-test/**
+.vscode/**
+*.mongo
+*.tgz
+*.ts
+*.zip
+**/*.map
+build
+dist/test/**
+gulp*
+node_modules/**
+out/**
+src/**
+stats.json
+test-results.xml
+test/**
+testOutput/**
+testWorkspace/**
+tsconfig.json
+tslint.json
+webpack.config*
