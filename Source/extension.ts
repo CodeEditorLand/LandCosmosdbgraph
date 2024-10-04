@@ -3,38 +3,61 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-'use strict';
+"use strict";
 
-import * as vscode from 'vscode';
-import { AzureUserInput, callWithTelemetryAndErrorHandling, createApiProvider, createAzExtOutputChannel, IActionContext, registerUIExtensionVariables } from 'vscode-azureextensionui';
-import { AzureExtensionApi, AzureExtensionApiProvider } from 'vscode-azureextensionui/api';
-import { openGraphExplorer } from './commands/api/openGraphExplorer';
-import { ext } from './extensionVariables';
-import { GraphViewsManager } from './graph/GraphViewsManager';
+import * as vscode from "vscode";
+import {
+	AzureUserInput,
+	callWithTelemetryAndErrorHandling,
+	createApiProvider,
+	createAzExtOutputChannel,
+	IActionContext,
+	registerUIExtensionVariables,
+} from "vscode-azureextensionui";
+import {
+	AzureExtensionApi,
+	AzureExtensionApiProvider,
+} from "vscode-azureextensionui/api";
 
-export async function activateInternal(context: vscode.ExtensionContext, perfStats: { loadStartTime: number, loadEndTime: number }, ignoreBundle?: boolean): Promise<AzureExtensionApiProvider> {
-    ext.context = context;
-    ext.ignoreBundle = ignoreBundle;
-    ext.ui = new AzureUserInput(context.globalState);
+import { openGraphExplorer } from "./commands/api/openGraphExplorer";
+import { ext } from "./extensionVariables";
+import { GraphViewsManager } from "./graph/GraphViewsManager";
 
-    ext.outputChannel = createAzExtOutputChannel("Azure Cosmos DB Graph", ext.prefix);
-    context.subscriptions.push(ext.outputChannel);
-    registerUIExtensionVariables(ext);
+export async function activateInternal(
+	context: vscode.ExtensionContext,
+	perfStats: { loadStartTime: number; loadEndTime: number },
+	ignoreBundle?: boolean,
+): Promise<AzureExtensionApiProvider> {
+	ext.context = context;
+	ext.ignoreBundle = ignoreBundle;
+	ext.ui = new AzureUserInput(context.globalState);
 
-    // tslint:disable-next-line: max-func-body-length
-    await callWithTelemetryAndErrorHandling('cosmosDBGraph.activate', async (activateContext: IActionContext) => {
-        activateContext.telemetry.properties.isActivationEvent = 'true';
-        activateContext.telemetry.measurements.mainFileLoad = (perfStats.loadEndTime - perfStats.loadStartTime) / 1000;
+	ext.outputChannel = createAzExtOutputChannel(
+		"Azure Cosmos DB Graph",
+		ext.prefix,
+	);
+	context.subscriptions.push(ext.outputChannel);
+	registerUIExtensionVariables(ext);
 
-        ext.graphViewsManager = new GraphViewsManager();
-    });
+	// tslint:disable-next-line: max-func-body-length
+	await callWithTelemetryAndErrorHandling(
+		"cosmosDBGraph.activate",
+		async (activateContext: IActionContext) => {
+			activateContext.telemetry.properties.isActivationEvent = "true";
+			activateContext.telemetry.measurements.mainFileLoad =
+				(perfStats.loadEndTime - perfStats.loadStartTime) / 1000;
 
-    return createApiProvider([<AzureExtensionApi>{
-        openGraphExplorer,
-        apiVersion: '1.0.0'
-    }]);
+			ext.graphViewsManager = new GraphViewsManager();
+		},
+	);
+
+	return createApiProvider([
+		<AzureExtensionApi>{
+			openGraphExplorer,
+			apiVersion: "1.0.0",
+		},
+	]);
 }
 
 // tslint:disable-next-line:no-empty
-export function deactivateInternal(): void {
-}
+export function deactivateInternal(): void {}

@@ -37,559 +37,680 @@ const paddingBetweenVertexAndEdge = 3;
 const AutoColor = "auto";
 
 let htmlElements: {
-    debugLog: HTMLTextAreaElement,
-    graphRadio: HTMLInputElement,
-    graphSection: HTMLDivElement,
-    jsonRadio: HTMLInputElement,
-    jsonResults: HTMLTextAreaElement,
-    jsonSection: HTMLDivElement,
-    queryError: HTMLTextAreaElement,
-    queryInput: HTMLInputElement,
-    stats: HTMLSpanElement,
-    title: HTMLElement,
-    resultsBackground: HTMLDivElement
+	debugLog: HTMLTextAreaElement;
+	graphRadio: HTMLInputElement;
+	graphSection: HTMLDivElement;
+	jsonRadio: HTMLInputElement;
+	jsonResults: HTMLTextAreaElement;
+	jsonSection: HTMLDivElement;
+	queryError: HTMLTextAreaElement;
+	queryInput: HTMLInputElement;
+	stats: HTMLSpanElement;
+	title: HTMLElement;
+	resultsBackground: HTMLDivElement;
 };
 
-type State = "initial" | "querying" | "error" | "json-results" | "graph-results" | "empty-results";
+type State =
+	| "initial"
+	| "querying"
+	| "error"
+	| "json-results"
+	| "graph-results"
+	| "empty-results";
 
 window.onerror = (message) => {
-    logToUI("ERROR: " + message);
+	logToUI("ERROR: " + message);
 };
 
 function getErrorMessage(error: any) {
-    return error.message || error.toString();
+	return error.message || error.toString();
 }
 
 function logToUI(s: string) {
-    console.log(s);
-    // let v = htmlElements.debugLog.value;
-    // v += "\r\n" + s;
-    // htmlElements.debugLog.value = v;
+	console.log(s);
+	// let v = htmlElements.debugLog.value;
+	// v += "\r\n" + s;
+	// htmlElements.debugLog.value = v;
 }
 
 interface ForceNode {
-    vertex: GraphVertex;
-    x: number;
-    y: number;
+	vertex: GraphVertex;
+	x: number;
+	y: number;
 }
 
 interface ForceLink {
-    edge: GraphEdge;
-    source: ForceNode;
-    target: ForceNode;
+	edge: GraphEdge;
+	source: ForceNode;
+	target: ForceNode;
 }
 
 interface Point2D {
-    x: number;
-    y: number;
+	x: number;
+	y: number;
 }
 
 class SocketWrapper {
-    constructor(private _socket: SocketIOClient.Socket) { }
+	constructor(private _socket: SocketIOClient.Socket) {}
 
-    public onServerMessage(message: ServerMessage | "connect" | "disconnect", fn: Function): SocketIOClient.Emitter {
-        //use webview's onDidGetMessage
-        return this._socket.on(message, (...args: any[]) => {
-            try {
-                fn(...args);
-            } catch (err) {
-                this.emitToHost('log', getErrorMessage(err));
-                logToUI(err);
-            }
-        });
-    }
+	public onServerMessage(
+		message: ServerMessage | "connect" | "disconnect",
+		fn: Function,
+	): SocketIOClient.Emitter {
+		//use webview's onDidGetMessage
+		return this._socket.on(message, (...args: any[]) => {
+			try {
+				fn(...args);
+			} catch (err) {
+				this.emitToHost("log", getErrorMessage(err));
+				logToUI(err);
+			}
+		});
+	}
 
-    public emitToHost(message: ClientMessage, ...args: any[]): SocketIOClient.Socket {
-        logToUI("Message to host: " + message + " " + args.join(", "));
-        return this._socket.emit(message, ...args);
-    }
+	public emitToHost(
+		message: ClientMessage,
+		...args: any[]
+	): SocketIOClient.Socket {
+		logToUI("Message to host: " + message + " " + args.join(", "));
+		return this._socket.emit(message, ...args);
+	}
 }
 
 // tslint:disable-next-line: export-name
 export class GraphClient {
-    private _socket: SocketWrapper;
-    private _currentQueryId = 0;
-    private _isGraphView: boolean;
-    private _graphView: GraphView;
+	private _socket: SocketWrapper;
+	private _currentQueryId = 0;
+	private _isGraphView: boolean;
+	private _graphView: GraphView;
 
-    constructor(port: number) {
-        htmlElements = {
-            debugLog: this.selectById("debugLog"),
-            jsonSection: this.selectById("jsonSection"),
-            graphSection: this.selectById("graphSection"),
-            jsonResults: this.selectById("jsonResults"),
-            queryError: this.selectById("queryError"),
-            queryInput: this.selectById("queryInput"),
-            stats: this.selectById("stats"),
-            title: this.selectById("title"),
-            graphRadio: this.selectById("graphRadio"),
-            jsonRadio: this.selectById("jsonRadio"),
-            resultsBackground: this.selectById("resultsBackground")
-        };
+	constructor(port: number) {
+		htmlElements = {
+			debugLog: this.selectById("debugLog"),
+			jsonSection: this.selectById("jsonSection"),
+			graphSection: this.selectById("graphSection"),
+			jsonResults: this.selectById("jsonResults"),
+			queryError: this.selectById("queryError"),
+			queryInput: this.selectById("queryInput"),
+			stats: this.selectById("stats"),
+			title: this.selectById("title"),
+			graphRadio: this.selectById("graphRadio"),
+			jsonRadio: this.selectById("jsonRadio"),
+			resultsBackground: this.selectById("resultsBackground"),
+		};
 
-        this._graphView = new GraphView();
+		this._graphView = new GraphView();
 
-        htmlElements.queryInput.value = defaultQuery;
+		htmlElements.queryInput.value = defaultQuery;
 
-        this.setStateInitial();
+		this.setStateInitial();
 
-        this.log(`Listening on port ${port}`);
-        // tslint:disable-next-line:no-http-string
-        this._socket = new SocketWrapper(io.connect(`http://localhost:${port}`));
+		this.log(`Listening on port ${port}`);
+		// tslint:disable-next-line:no-http-string
+		this._socket = new SocketWrapper(
+			io.connect(`http://localhost:${port}`),
+		);
 
-        // setInterval(() => {
-        //   this.log(`Client heartbeat on port ${port}: ${Date()}`);
-        // }, 10000);
+		// setInterval(() => {
+		//   this.log(`Client heartbeat on port ${port}: ${Date()}`);
+		// }, 10000);
 
-        this._socket.onServerMessage('connect', (): void => {
-            this.log(`Client connected on port ${port}`);
-            this._socket.emitToHost('getTitle');
-        });
+		this._socket.onServerMessage("connect", (): void => {
+			this.log(`Client connected on port ${port}`);
+			this._socket.emitToHost("getTitle");
+		});
 
-        this._socket.onServerMessage('disconnect', (): void => {
-            this.log("disconnect");
-        });
+		this._socket.onServerMessage("disconnect", (): void => {
+			this.log("disconnect");
+		});
 
-        this._socket.onServerMessage("setPageState", (pageState: PageState, viewSettings: GraphViewSettings) => {
-            htmlElements.queryInput.value = pageState.query;
+		this._socket.onServerMessage(
+			"setPageState",
+			(pageState: PageState, viewSettings: GraphViewSettings) => {
+				htmlElements.queryInput.value = pageState.query;
 
-            if (pageState.isQueryRunning) {
-                this._currentQueryId = pageState.runningQueryId;
-                this.setStateQuerying();
-                return;
-            }
+				if (pageState.isQueryRunning) {
+					this._currentQueryId = pageState.runningQueryId;
+					this.setStateQuerying();
+					return;
+				}
 
-            if (!pageState.errorMessage) {
-                this.showResults(pageState.results, viewSettings);
-            } else {
-                this.setStateError(pageState.errorMessage);
-            }
+				if (!pageState.errorMessage) {
+					this.showResults(pageState.results, viewSettings);
+				} else {
+					this.setStateError(pageState.errorMessage);
+				}
 
-            if (pageState.view === 'json') {
-                this.selectJsonView();
-            } else {
-                this.selectGraphView();
-            }
-        });
+				if (pageState.view === "json") {
+					this.selectJsonView();
+				} else {
+					this.selectGraphView();
+				}
+			},
+		);
 
-        this._socket.onServerMessage("setTitle", (title: string): void => {
-            this.log(`Received title: ${title}`);
-            d3.select(htmlElements.title).text(title);
-        });
+		this._socket.onServerMessage("setTitle", (title: string): void => {
+			this.log(`Received title: ${title}`);
+			d3.select(htmlElements.title).text(title);
+		});
 
-        this._socket.onServerMessage("showResults", (queryId: number, results: GraphResults, viewSettings: GraphViewSettings): void => {
-            this.log(`Received results for query ${queryId}`);
+		this._socket.onServerMessage(
+			"showResults",
+			(
+				queryId: number,
+				results: GraphResults,
+				viewSettings: GraphViewSettings,
+			): void => {
+				this.log(`Received results for query ${queryId}`);
 
-            if (queryId !== this._currentQueryId) {
-                this.log("  Ignoring results, out of date");
-            } else {
-                this.showResults(results, viewSettings);
-            }
-        });
+				if (queryId !== this._currentQueryId) {
+					this.log("  Ignoring results, out of date");
+				} else {
+					this.showResults(results, viewSettings);
+				}
+			},
+		);
 
-        this._socket.onServerMessage("showQueryError", (queryId: number, error: string): void => {
-            this.log(`Received error for query ${queryId} - ${error}`);
+		this._socket.onServerMessage(
+			"showQueryError",
+			(queryId: number, error: string): void => {
+				this.log(`Received error for query ${queryId} - ${error}`);
 
-            if (queryId !== this._currentQueryId) {
-                this.log("  Ignoring error, out of date");
-            } else {
-                this.setStateError(error);
-            }
-        });
-    }
+				if (queryId !== this._currentQueryId) {
+					this.log("  Ignoring error, out of date");
+				} else {
+					this.setStateError(error);
+				}
+			},
+		);
+	}
 
-    public getPageState() {
-        this._socket.emitToHost('getPageState');
-    }
+	public getPageState() {
+		this._socket.emitToHost("getPageState");
+	}
 
-    public copyParentStyleSheets() {
-        // Copy style sheets from parent to pick up theme colors
-        const head = document.getElementsByTagName("head")[0];
-        const styleSheets = parent.document.getElementsByTagName("style");
-        // The styleSheets object doesn't have a method returning an iterator
-        // tslint:disable-next-line:prefer-for-of
-        for (let i = 0; i < styleSheets.length; ++i) {
-            head.insertBefore(styleSheets[i].cloneNode(true), head.firstChild);
-        }
-    }
+	public copyParentStyleSheets() {
+		// Copy style sheets from parent to pick up theme colors
+		const head = document.getElementsByTagName("head")[0];
+		const styleSheets = parent.document.getElementsByTagName("style");
+		// The styleSheets object doesn't have a method returning an iterator
+		// tslint:disable-next-line:prefer-for-of
+		for (let i = 0; i < styleSheets.length; ++i) {
+			head.insertBefore(styleSheets[i].cloneNode(true), head.firstChild);
+		}
+	}
 
-    public query(gremlin: string) {
-        this._currentQueryId += 1;
-        this._socket.emitToHost("query", this._currentQueryId, gremlin);
+	public query(gremlin: string) {
+		this._currentQueryId += 1;
+		this._socket.emitToHost("query", this._currentQueryId, gremlin);
 
-        this.setStateQuerying();
-    }
+		this.setStateQuerying();
+	}
 
-    public selectGraphView() {
-        this._isGraphView = true;
-        this.setView();
-    }
+	public selectGraphView() {
+		this._isGraphView = true;
+		this.setView();
+	}
 
-    public selectJsonView() {
-        this._isGraphView = false;
-        this.setView();
-    }
+	public selectJsonView() {
+		this._isGraphView = false;
+		this.setView();
+	}
 
-    public setQuery(query: string) {
-        this._socket.emitToHost('setQuery', query);
-    }
+	public setQuery(query: string) {
+		this._socket.emitToHost("setQuery", query);
+	}
 
-    private selectById<T extends HTMLElement>(id: string): T {
-        const elem = <T>d3.select(`#${id}`)[0][0];
-        console.assert(!!elem, `Could not find element with ID ${id}`);
-        return elem;
-    }
+	private selectById<T extends HTMLElement>(id: string): T {
+		const elem = <T>d3.select(`#${id}`)[0][0];
+		console.assert(!!elem, `Could not find element with ID ${id}`);
+		return elem;
+	}
 
-    // Tells the host which view is selected (Json/Graph/etc)
-    private setView() {
-        htmlElements.graphRadio.checked = this._isGraphView;
-        htmlElements.jsonRadio.checked = !this._isGraphView;
-        d3.select(htmlElements.graphSection).classed("active", !!this._isGraphView);
-        d3.select(htmlElements.jsonSection).classed("active", !this._isGraphView);
-        this._socket.emitToHost('setView', this._isGraphView ? 'graph' : 'json');
-    }
+	// Tells the host which view is selected (Json/Graph/etc)
+	private setView() {
+		htmlElements.graphRadio.checked = this._isGraphView;
+		htmlElements.jsonRadio.checked = !this._isGraphView;
+		d3.select(htmlElements.graphSection).classed(
+			"active",
+			!!this._isGraphView,
+		);
+		d3.select(htmlElements.jsonSection).classed(
+			"active",
+			!this._isGraphView,
+		);
+		this._socket.emitToHost(
+			"setView",
+			this._isGraphView ? "graph" : "json",
+		);
+	}
 
-    private log(s: string) {
-        if (this._socket) {
-            this._socket.emitToHost('log', s);
-        }
+	private log(s: string) {
+		if (this._socket) {
+			this._socket.emitToHost("log", s);
+		}
 
-        logToUI(s);
-    }
+		logToUI(s);
+	}
 
-    private setStateInitial() {
-        this._setState("initial");
-    }
+	private setStateInitial() {
+		this._setState("initial");
+	}
 
-    private setStateQuerying() {
-        this._setState("querying");
-        this._graphView.clear();
-    }
+	private setStateQuerying() {
+		this._setState("querying");
+		this._graphView.clear();
+	}
 
-    private setStateError(error: any) {
-        htmlElements.queryError.value = getErrorMessage(error);
-        this._setState("error");
-        this._graphView.clear();
-    }
+	private setStateError(error: any) {
+		htmlElements.queryError.value = getErrorMessage(error);
+		this._setState("error");
+		this._graphView.clear();
+	}
 
-    private _setState(state: State) {
-        let fullState: string;
+	private _setState(state: State) {
+		let fullState: string;
 
-        switch (state) {
-            case "graph-results":
-                fullState = 'state-results state-graph-results';
-                break;
-            case "json-results":
-                fullState = 'state-results state-json-results state-non-graph-results';
-                break;
-            case "empty-results":
-                fullState = 'state-results state-json-results state-empty-results';
-                break;
-            default:
-                fullState = `state-${state}`;
-                break;
-        }
+		switch (state) {
+			case "graph-results":
+				fullState = "state-results state-graph-results";
+				break;
+			case "json-results":
+				fullState =
+					"state-results state-json-results state-non-graph-results";
+				break;
+			case "empty-results":
+				fullState =
+					"state-results state-json-results state-empty-results";
+				break;
+			default:
+				fullState = `state-${state}`;
+				break;
+		}
 
-        // Sets the state name into a CSS class onto the "#states" element. This is then used by CSS to
-        //   control visibility of HTML elements.
-        d3.select("#states").attr("class", fullState);
-    }
+		// Sets the state name into a CSS class onto the "#states" element. This is then used by CSS to
+		//   control visibility of HTML elements.
+		d3.select("#states").attr("class", fullState);
+	}
 
-    private showResults(results: GraphResults, viewSettings: GraphViewSettings): void {
-        // queryResults may contain any type of data, not just vertices or edges
+	private showResults(
+		results: GraphResults,
+		viewSettings: GraphViewSettings,
+	): void {
+		// queryResults may contain any type of data, not just vertices or edges
 
-        // Always show the full original results JSON
-        htmlElements.jsonResults.value = JSON.stringify(results.fullResults, null, 2);
+		// Always show the full original results JSON
+		htmlElements.jsonResults.value = JSON.stringify(
+			results.fullResults,
+			null,
+			2,
+		);
 
-        if (Array.isArray(results.fullResults) && !results.fullResults.length) {
-            this._setState("empty-results");
-        } else if (!results.limitedVertices.length) {
-            // No vertices to show, just show query JSON
-            this._setState("json-results");
-        } else {
-            this._setState("graph-results");
-            this._graphView.display(results.countUniqueVertices, results.limitedVertices, results.countUniqueEdges, results.limitedEdges, viewSettings);
-        }
-    }
+		if (Array.isArray(results.fullResults) && !results.fullResults.length) {
+			this._setState("empty-results");
+		} else if (!results.limitedVertices.length) {
+			// No vertices to show, just show query JSON
+			this._setState("json-results");
+		} else {
+			this._setState("graph-results");
+			this._graphView.display(
+				results.countUniqueVertices,
+				results.limitedVertices,
+				results.countUniqueEdges,
+				results.limitedEdges,
+				viewSettings,
+			);
+		}
+	}
 }
 
 class GraphView {
-    private _force: any;
-    private _defaultColorsPerLabel = new Map<string, string>();
-    private _colorGenerator: (i: number) => string = d3.scale.category20();
+	private _force: any;
+	private _defaultColorsPerLabel = new Map<string, string>();
+	private _colorGenerator: (i: number) => string = d3.scale.category20();
 
-    private static calculateClosestPIOver2(angle: number): number {
-        const CURVATURE_FACTOR = 40;
-        return (Math.atan(CURVATURE_FACTOR * (angle - (Math.PI / 4))) / 2) + (Math.PI / 4);
-    }
+	private static calculateClosestPIOver2(angle: number): number {
+		const CURVATURE_FACTOR = 40;
+		return (
+			Math.atan(CURVATURE_FACTOR * (angle - Math.PI / 4)) / 2 +
+			Math.PI / 4
+		);
+	}
 
-    private static calculateControlPoint(start: Point2D, end: Point2D): Point2D {
-        const alpha = Math.atan2(end.y - start.y, end.x - start.x);
-        const n = Math.floor(alpha / (Math.PI / 2));
-        const reducedAlpha = alpha - (n * Math.PI / 2);
-        const reducedBeta = GraphView.calculateClosestPIOver2(reducedAlpha);
-        const beta = reducedBeta + (n * Math.PI / 2);
+	private static calculateControlPoint(
+		start: Point2D,
+		end: Point2D,
+	): Point2D {
+		const alpha = Math.atan2(end.y - start.y, end.x - start.x);
+		const n = Math.floor(alpha / (Math.PI / 2));
+		const reducedAlpha = alpha - (n * Math.PI) / 2;
+		const reducedBeta = GraphView.calculateClosestPIOver2(reducedAlpha);
+		const beta = reducedBeta + (n * Math.PI) / 2;
 
-        const length = Math.sqrt((end.y - start.y) * (end.y - start.y) + (end.x - start.x) * (end.x - start.x)) / 2;
-        return {
-            x: start.x + Math.cos(beta) * length,
-            y: start.y + Math.sin(beta) * length
-        };
-    }
+		const length =
+			Math.sqrt(
+				(end.y - start.y) * (end.y - start.y) +
+					(end.x - start.x) * (end.x - start.x),
+			) / 2;
+		return {
+			x: start.x + Math.cos(beta) * length,
+			y: start.y + Math.sin(beta) * length,
+		};
+	}
 
-    // tslint:disable-next-line: max-func-body-length
-    public display(countUniqueVertices: number, vertices: GraphVertex[], countUniqueEdges: number, edges: GraphEdge[], viewSettings: GraphViewSettings) {
-        this.clear();
-        this.generateDefaultColors(vertices);
+	// tslint:disable-next-line: max-func-body-length
+	public display(
+		countUniqueVertices: number,
+		vertices: GraphVertex[],
+		countUniqueEdges: number,
+		edges: GraphEdge[],
+		viewSettings: GraphViewSettings,
+	) {
+		this.clear();
+		this.generateDefaultColors(vertices);
 
-        // Set up nodes and links for the force simulation
-        const nodes: ForceNode[] = vertices
-            .map(v => <ForceNode>{ vertex: v });
+		// Set up nodes and links for the force simulation
+		const nodes: ForceNode[] = vertices.map(
+			(v) => <ForceNode>{ vertex: v },
+		);
 
-        // Create map of nodes by ID
-        let nodesById = new Map<string, ForceNode>();
-        nodes.forEach(n => nodesById.set(n.vertex.id, n));
+		// Create map of nodes by ID
+		let nodesById = new Map<string, ForceNode>();
+		nodes.forEach((n) => nodesById.set(n.vertex.id, n));
 
-        // Create edges and set their source/target
-        const links: ForceLink[] = [];
-        edges.forEach(e => {
-            const source = nodesById.get(e.outV);
-            const target = nodesById.get(e.inV);
+		// Create edges and set their source/target
+		const links: ForceLink[] = [];
+		edges.forEach((e) => {
+			const source = nodesById.get(e.outV);
+			const target = nodesById.get(e.inV);
 
-            if (source && target) {
-                links.push({ edge: e, source, target });
-            } else {
-                console.error("Vertex not found");
-            }
-        });
-        nodesById = null;
+			if (source && target) {
+				links.push({ edge: e, source, target });
+			} else {
+				console.error("Vertex not found");
+			}
+		});
+		nodesById = null;
 
-        const statsText: string = (nodes.length === countUniqueVertices && links.length === countUniqueEdges) ?
-            `Displaying all ${nodes.length} vertices and ${links.length} edges` :
-            `Displaying ${nodes.length} of ${countUniqueVertices} vertices and ${links.length} of ${countUniqueEdges} edges`;
-        d3.select(htmlElements.stats).text(statsText);
+		const statsText: string =
+			nodes.length === countUniqueVertices &&
+			links.length === countUniqueEdges
+				? `Displaying all ${nodes.length} vertices and ${links.length} edges`
+				: `Displaying ${nodes.length} of ${countUniqueVertices} vertices and ${links.length} of ${countUniqueEdges} edges`;
+		d3.select(htmlElements.stats).text(statsText);
 
-        // Set up force simulation
-        if (this._force) {
-            this._force.stop();
-        }
-        this._force = d3.layout.force()
-            .size([htmlElements.resultsBackground.clientWidth, htmlElements.resultsBackground.clientHeight])
-            .nodes(nodes)
-            .links(links);
-        const force = this._force;
+		// Set up force simulation
+		if (this._force) {
+			this._force.stop();
+		}
+		this._force = d3.layout
+			.force()
+			.size([
+				htmlElements.resultsBackground.clientWidth,
+				htmlElements.resultsBackground.clientHeight,
+			])
+			.nodes(nodes)
+			.links(links);
+		const force = this._force;
 
-        force.gravity(1); // Makes the nodes gravitate toward the center
-        force.friction(.5);
+		force.gravity(1); // Makes the nodes gravitate toward the center
+		force.friction(0.5);
 
-        force.linkDistance(linkDistance); // edge length
-        force.linkStrength(linkStrength);
-        force.charge(charge);
+		force.linkDistance(linkDistance); // edge length
+		force.linkStrength(linkStrength);
+		force.charge(charge);
 
-        let svg = d3.select(htmlElements.graphSection).select("svg");
+		let svg = d3.select(htmlElements.graphSection).select("svg");
 
-        // Add a re-usable arrow
-        svg.select('defs')
-            .selectAll('marker')
-            .data(['end'])
-            .enter()
-            .append('marker')
-            .attr('id', 'triangle')
-            .attr('viewBox', '0 -5 10 10')
-            .attr('refX', arrowDistanceFromVertex) // Shift arrow so that we can see it.
-            .attr('refY', 0)
-            .attr('markerWidth', 6)
-            .attr('markerHeight', 6)
-            .attr('orient', 'auto')
-            .attr('markerUnits', 'userSpaceOnUse') // No auto-scaling with stroke width
-            .append('path')
-            .attr('d', 'M0,-5L10,0L0,5');
+		// Add a re-usable arrow
+		svg.select("defs")
+			.selectAll("marker")
+			.data(["end"])
+			.enter()
+			.append("marker")
+			.attr("id", "triangle")
+			.attr("viewBox", "0 -5 10 10")
+			.attr("refX", arrowDistanceFromVertex) // Shift arrow so that we can see it.
+			.attr("refY", 0)
+			.attr("markerWidth", 6)
+			.attr("markerHeight", 6)
+			.attr("orient", "auto")
+			.attr("markerUnits", "userSpaceOnUse") // No auto-scaling with stroke width
+			.append("path")
+			.attr("d", "M0,-5L10,0L0,5");
 
-        // Allow user to drag/zoom the entire SVG
-        svg = svg
-            // tslint:disable-next-line:no-function-expression // Grandfathered in
-            .call(d3.behavior.zoom().on("zoom", function () {
-                svg.attr("transform", "translate(" + d3.event.translate + ")" + " scale(" + d3.event.scale + ")");
-            }))
-            .append("g");
+		// Allow user to drag/zoom the entire SVG
+		svg = svg
+			// tslint:disable-next-line:no-function-expression // Grandfathered in
+			.call(
+				d3.behavior.zoom().on("zoom", function () {
+					svg.attr(
+						"transform",
+						"translate(" +
+							d3.event.translate +
+							")" +
+							" scale(" +
+							d3.event.scale +
+							")",
+					);
+				}),
+			)
+			.append("g");
 
-        // Links before nodes so that links don't get drawn on top of node labels, obscuring them
-        const edge = svg.selectAll(".edge")
-            .data(links)
-            .enter()
-            .append("path")
-            .attr('class', 'edge')
-            .attr('fill', 'none')
-            .attr('marker-end', 'url(#triangle)');
+		// Links before nodes so that links don't get drawn on top of node labels, obscuring them
+		const edge = svg
+			.selectAll(".edge")
+			.data(links)
+			.enter()
+			.append("path")
+			.attr("class", "edge")
+			.attr("fill", "none")
+			.attr("marker-end", "url(#triangle)");
 
-        // Allow user to drag nodes. Set "dragging" class while dragging.
-        const vertexDrag = force.drag().on("dragstart", function (this: any) {
-            d3.select(this).classed("dragging", true);
+		// Allow user to drag nodes. Set "dragging" class while dragging.
+		const vertexDrag = force
+			.drag()
+			.on("dragstart", function (this: any) {
+				d3.select(this).classed("dragging", true);
 
-            // Make sure a drag gesture doesn't also start a zoom action
-            d3.event.sourceEvent.stopPropagation();
-        })
-            .on("dragend", function (this: any) { d3.select(this).classed("dragging", false); });
+				// Make sure a drag gesture doesn't also start a zoom action
+				d3.event.sourceEvent.stopPropagation();
+			})
+			.on("dragend", function (this: any) {
+				d3.select(this).classed("dragging", false);
+			});
 
-        // Labels
-        const label = svg.selectAll(".label")
-            .data(nodes)
-            .enter().append("text")
-            .attr("class", "label")
-            .attr("x", "10px")
-            .attr("y", "2px")
-            .attr('font-size', 13)
-            .text((d: ForceNode) => this.getVertexDisplayText(d.vertex, viewSettings))
-            ;
+		// Labels
+		const label = svg
+			.selectAll(".label")
+			.data(nodes)
+			.enter()
+			.append("text")
+			.attr("class", "label")
+			.attr("x", "10px")
+			.attr("y", "2px")
+			.attr("font-size", 13)
+			.text((d: ForceNode) =>
+				this.getVertexDisplayText(d.vertex, viewSettings),
+			);
+		// Nodes last so that they're always and top to be able to be dragged
+		const vertex = svg
+			.selectAll(".vertex")
+			.data(nodes)
+			.enter()
+			.append("circle")
+			.attr("class", "vertex")
+			.attr("cx", (d: ForceNode) => d.x)
+			.attr("cy", (d: ForceNode) => d.y)
+			.style("fill", (d: ForceNode) =>
+				this.getVertexColor(d.vertex, viewSettings),
+			)
+			.call(vertexDrag);
+		// On each tick of the simulation, update the positions of each vertex and edge
+		force.on("tick", () => {
+			vertex
+				.transition()
+				.ease("linear")
+				.duration(animationStepMs)
+				.attr("cx", (d: ForceNode) => d.x)
+				.attr("cy", (d: ForceNode) => d.y);
 
-        // Nodes last so that they're always and top to be able to be dragged
-        const vertex = svg.selectAll(".vertex")
-            .data(nodes)
-            .enter().append("circle")
-            .attr("class", "vertex")
-            .attr("cx", (d: ForceNode) => d.x)
-            .attr("cy", (d: ForceNode) => d.y)
-            .style("fill", (d: ForceNode) => this.getVertexColor(d.vertex, viewSettings))
-            .call(vertexDrag)
-            ;
+			edge.transition()
+				.ease("linear")
+				.duration(animationStepMs)
+				.attr("x1", (d: ForceLink) => d.source.x)
+				.attr("y1", (d: ForceLink) => d.source.y)
+				.attr("x2", (d: ForceLink) => d.target.x)
+				.attr("y2", (d: ForceLink) => d.target.y);
 
-        // On each tick of the simulation, update the positions of each vertex and edge
-        force.on("tick", () => {
-            vertex
-                .transition().ease("linear").duration(animationStepMs)
-                .attr("cx", (d: ForceNode) => d.x)
-                .attr("cy", (d: ForceNode) => d.y)
-                ;
+			edge.attr("d", (d: ForceLink) => {
+				return this.positionLink(d);
+			});
 
-            edge
-                .transition().ease("linear").duration(animationStepMs)
-                .attr("x1", (d: ForceLink) => d.source.x)
-                .attr("y1", (d: ForceLink) => d.source.y)
-                .attr("x2", (d: ForceLink) => d.target.x)
-                .attr("y2", (d: ForceLink) => d.target.y)
-                ;
+			label
+				.transition()
+				.ease("linear")
+				.duration(animationStepMs)
+				.attr("class", "label")
+				.attr("dx", (d: ForceNode) => d.x)
+				.attr("dy", (d: ForceNode) => d.y);
+		});
 
-            edge.attr("d", (d: ForceLink) => { return this.positionLink(d); });
+		force.start();
+	}
 
-            label
-                .transition().ease("linear").duration(animationStepMs)
-                .attr("class", "label")
-                .attr("dx", (d: ForceNode) => d.x)
-                .attr("dy", (d: ForceNode) => d.y)
-                ;
-        });
+	public clear(): void {
+		d3.select(htmlElements.graphSection)
+			.select("svg")
+			.selectAll(".vertex, .edge, .label")
+			.remove();
+	}
 
-        force.start();
-    }
+	private generateDefaultColors(vertices: GraphVertex[]): void {
+		// Keep previous entries, changing colors between queries would be confusing
 
-    public clear(): void {
-        d3.select(htmlElements.graphSection).select("svg").selectAll(".vertex, .edge, .label").remove();
-    }
+		for (const vertex of vertices) {
+			const label = vertex.label;
+			if (!this._defaultColorsPerLabel.get(label)) {
+				const colorIndex = this._defaultColorsPerLabel.size;
+				const newColor = this._colorGenerator(colorIndex);
+				this._defaultColorsPerLabel.set(label, newColor);
+			}
+		}
+	}
 
-    private generateDefaultColors(vertices: GraphVertex[]): void {
-        // Keep previous entries, changing colors between queries would be confusing
+	private positionLink(l: any) {
+		const d1 = GraphView.calculateControlPoint(l.source, l.target);
 
-        for (const vertex of vertices) {
-            const label = vertex.label;
-            if (!this._defaultColorsPerLabel.get(label)) {
-                const colorIndex = this._defaultColorsPerLabel.size;
-                const newColor = this._colorGenerator(colorIndex);
-                this._defaultColorsPerLabel.set(label, newColor);
-            }
-        }
-    }
+		const radius = vertexRadius + paddingBetweenVertexAndEdge;
 
-    private positionLink(l: any) {
-        const d1 = GraphView.calculateControlPoint(l.source, l.target);
+		// Start
+		let dx = d1.x - l.source.x;
+		let dy = d1.y - l.source.y;
+		let angle = Math.atan2(dy, dx);
+		const tx = l.source.x + Math.cos(angle) * radius;
+		const ty = l.source.y + Math.sin(angle) * radius;
 
-        const radius = vertexRadius + paddingBetweenVertexAndEdge;
+		// End
+		dx = l.target.x - d1.x;
+		dy = l.target.y - d1.y;
+		angle = Math.atan2(dy, dx);
+		const ux = l.target.x - Math.cos(angle) * radius;
+		const uy = l.target.y - Math.sin(angle) * radius;
 
-        // Start
-        let dx = d1.x - l.source.x;
-        let dy = d1.y - l.source.y;
-        let angle = Math.atan2(dy, dx);
-        const tx = l.source.x + (Math.cos(angle) * radius);
-        const ty = l.source.y + (Math.sin(angle) * radius);
+		return (
+			"M" + tx + "," + ty + "S" + d1.x + "," + d1.y + " " + ux + "," + uy
+		);
+	}
 
-        // End
-        dx = l.target.x - d1.x;
-        dy = l.target.y - d1.y;
-        angle = Math.atan2(dy, dx);
-        const ux = l.target.x - (Math.cos(angle) * radius);
-        const uy = l.target.y - (Math.sin(angle) * radius);
+	private findVertexPropertySetting(
+		v: GraphVertex,
+		viewSettings: GraphViewSettings,
+		settingProperty: keyof VertexSettingsGroup,
+	): any | undefined {
+		const label = v.label;
 
-        return "M" + tx + "," + ty
-            + "S" + d1.x + "," + d1.y
-            + " " + ux + "," + uy;
-    }
+		for (const graphSettingsGroup of viewSettings) {
+			const vertextSettingsGroups: VertexSettingsGroup[] =
+				graphSettingsGroup.vertexSettings || [];
 
-    private findVertexPropertySetting(v: GraphVertex, viewSettings: GraphViewSettings, settingProperty: keyof VertexSettingsGroup): any | undefined {
-        const label = v.label;
+			// Check groups which specify a label filter first
+			for (const group of vertextSettingsGroups) {
+				if (group.appliesToLabel && group.appliesToLabel === label) {
+					// This settings group is applicable to this vertex
+					const value = group[settingProperty];
+					if (value !== undefined && value !== null) {
+						return value;
+					}
+				}
+			}
 
-        for (const graphSettingsGroup of viewSettings) {
-            const vertextSettingsGroups: VertexSettingsGroup[] = graphSettingsGroup.vertexSettings || [];
+			// Check for a default group with no appliesToLabel
+			const defaultGroup: VertexSettingsGroup =
+				vertextSettingsGroups.find((group) => !group.appliesToLabel);
+			if (defaultGroup) {
+				const value = defaultGroup[settingProperty];
+				if (value !== undefined && value !== null) {
+					return value;
+				}
+			}
+		}
+	}
 
-            // Check groups which specify a label filter first
-            for (const group of vertextSettingsGroups) {
-                if (group.appliesToLabel && group.appliesToLabel === label) {
-                    // This settings group is applicable to this vertex
-                    const value = group[settingProperty];
-                    if (value !== undefined && value !== null) {
-                        return value;
-                    }
-                }
-            }
+	private getVertexColor(
+		v: GraphVertex,
+		viewSettings: GraphViewSettings,
+	): string {
+		const color = this.findVertexPropertySetting(v, viewSettings, "color");
+		if (color && color !== AutoColor) {
+			return color;
+		}
 
-            // Check for a default group with no appliesToLabel
-            const defaultGroup: VertexSettingsGroup = vertextSettingsGroups.find(group => !group.appliesToLabel);
-            if (defaultGroup) {
-                const value = defaultGroup[settingProperty];
-                if (value !== undefined && value !== null) {
-                    return value;
-                }
-            }
-        }
-    }
+		// Default is to use "auto" behavior and choose color based on label
+		return this._defaultColorsPerLabel.get(v.label);
+	}
 
-    private getVertexColor(v: GraphVertex, viewSettings: GraphViewSettings): string {
-        const color = this.findVertexPropertySetting(v, viewSettings, "color");
-        if (color && color !== AutoColor) {
-            return color;
-        }
+	private getVertexDisplayText(
+		v: GraphVertex,
+		viewSettings: GraphViewSettings,
+	): string {
+		let text: string;
+		const propertyCandidates =
+			this.findVertexPropertySetting(
+				v,
+				viewSettings,
+				"displayProperty",
+			) || [];
+		// Find the first specified property that exists and has a non-empty value
+		for (const candidate of propertyCandidates) {
+			if (candidate === "id") {
+				text = v.id;
+			} else if (candidate === "label" && v.label) {
+				text = v.label;
+			} else {
+				if (v.properties && candidate in v.properties) {
+					const property = v.properties[candidate][0];
+					if (property && property.value) {
+						text = property.value;
+						break;
+					}
+				}
+			}
+		}
 
-        // Default is to use "auto" behavior and choose color based on label
-        return this._defaultColorsPerLabel.get(v.label);
-    }
+		// Otherwise use "id"
+		text = text || v.id;
 
-    private getVertexDisplayText(v: GraphVertex, viewSettings: GraphViewSettings): string {
-        let text: string;
-        const propertyCandidates = this.findVertexPropertySetting(v, viewSettings, "displayProperty") || [];
-        // Find the first specified property that exists and has a non-empty value
-        for (const candidate of propertyCandidates) {
-            if (candidate === "id") {
-                text = v.id;
-            } else if (candidate === "label" && v.label) {
-                text = v.label;
-            } else {
-                if (v.properties && candidate in v.properties) {
-                    const property = v.properties[candidate][0];
-                    if (property && property.value) {
-                        text = property.value;
-                        break;
-                    }
-                }
-            }
-        }
+		let showLabel = this.findVertexPropertySetting(
+			v,
+			viewSettings,
+			"showLabel",
+		);
+		showLabel = showLabel === undefined ? true : showLabel; // Default to true if not specified
+		if (showLabel && v.label) {
+			text += ` (${v.label})`;
+		}
 
-        // Otherwise use "id"
-        text = text || v.id;
-
-        let showLabel = this.findVertexPropertySetting(v, viewSettings, "showLabel");
-        showLabel = showLabel === undefined ? true : showLabel; // Default to true if not specified
-        if (showLabel && v.label) {
-            text += ` (${v.label})`;
-        }
-
-        return text;
-    }
+		return text;
+	}
 }
