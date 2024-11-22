@@ -27,13 +27,19 @@
 declare let d3: any;
 
 const animationStepMs = 50;
+
 const defaultQuery = "g.V()";
+
 const linkDistance = 400;
+
 const linkStrength = 0.01; // Reduce rigidity of the links (if < 1, the full linkDistance is relaxed)
 const charge = -3000;
+
 const arrowDistanceFromVertex = 10;
+
 const vertexRadius = 8; // from css
 const paddingBetweenVertexAndEdge = 3;
+
 const AutoColor = "auto";
 
 let htmlElements: {
@@ -113,6 +119,7 @@ class SocketWrapper {
 		...args: any[]
 	): SocketIOClient.Socket {
 		logToUI("Message to host: " + message + " " + args.join(", "));
+
 		return this._socket.emit(message, ...args);
 	}
 }
@@ -172,6 +179,7 @@ export class GraphClient {
 				if (pageState.isQueryRunning) {
 					this._currentQueryId = pageState.runningQueryId;
 					this.setStateQuerying();
+
 					return;
 				}
 
@@ -232,6 +240,7 @@ export class GraphClient {
 	public copyParentStyleSheets() {
 		// Copy style sheets from parent to pick up theme colors
 		const head = document.getElementsByTagName("head")[0];
+
 		const styleSheets = parent.document.getElementsByTagName("style");
 		// The styleSheets object doesn't have a method returning an iterator
 		// tslint:disable-next-line:prefer-for-of
@@ -264,6 +273,7 @@ export class GraphClient {
 	private selectById<T extends HTMLElement>(id: string): T {
 		const elem = <T>d3.select(`#${id}`)[0][0];
 		console.assert(!!elem, `Could not find element with ID ${id}`);
+
 		return elem;
 	}
 
@@ -314,17 +324,24 @@ export class GraphClient {
 		switch (state) {
 			case "graph-results":
 				fullState = "state-results state-graph-results";
+
 				break;
+
 			case "json-results":
 				fullState =
 					"state-results state-json-results state-non-graph-results";
+
 				break;
+
 			case "empty-results":
 				fullState =
 					"state-results state-json-results state-empty-results";
+
 				break;
+
 			default:
 				fullState = `state-${state}`;
+
 				break;
 		}
 
@@ -371,6 +388,7 @@ class GraphView {
 
 	private static calculateClosestPIOver2(angle: number): number {
 		const CURVATURE_FACTOR = 40;
+
 		return (
 			Math.atan(CURVATURE_FACTOR * (angle - Math.PI / 4)) / 2 +
 			Math.PI / 4
@@ -382,9 +400,13 @@ class GraphView {
 		end: Point2D,
 	): Point2D {
 		const alpha = Math.atan2(end.y - start.y, end.x - start.x);
+
 		const n = Math.floor(alpha / (Math.PI / 2));
+
 		const reducedAlpha = alpha - (n * Math.PI) / 2;
+
 		const reducedBeta = GraphView.calculateClosestPIOver2(reducedAlpha);
+
 		const beta = reducedBeta + (n * Math.PI) / 2;
 
 		const length =
@@ -392,6 +414,7 @@ class GraphView {
 				(end.y - start.y) * (end.y - start.y) +
 					(end.x - start.x) * (end.x - start.x),
 			) / 2;
+
 		return {
 			x: start.x + Math.cos(beta) * length,
 			y: start.y + Math.sin(beta) * length,
@@ -422,6 +445,7 @@ class GraphView {
 		const links: ForceLink[] = [];
 		edges.forEach((e) => {
 			const source = nodesById.get(e.outV);
+
 			const target = nodesById.get(e.inV);
 
 			if (source && target) {
@@ -451,6 +475,7 @@ class GraphView {
 			])
 			.nodes(nodes)
 			.links(links);
+
 		const force = this._force;
 
 		force.gravity(1); // Makes the nodes gravitate toward the center
@@ -458,6 +483,7 @@ class GraphView {
 
 		force.linkDistance(linkDistance); // edge length
 		force.linkStrength(linkStrength);
+
 		force.charge(charge);
 
 		let svg = d3.select(htmlElements.graphSection).select("svg");
@@ -591,8 +617,10 @@ class GraphView {
 
 		for (const vertex of vertices) {
 			const label = vertex.label;
+
 			if (!this._defaultColorsPerLabel.get(label)) {
 				const colorIndex = this._defaultColorsPerLabel.size;
+
 				const newColor = this._colorGenerator(colorIndex);
 				this._defaultColorsPerLabel.set(label, newColor);
 			}
@@ -606,16 +634,22 @@ class GraphView {
 
 		// Start
 		let dx = d1.x - l.source.x;
+
 		let dy = d1.y - l.source.y;
+
 		let angle = Math.atan2(dy, dx);
+
 		const tx = l.source.x + Math.cos(angle) * radius;
+
 		const ty = l.source.y + Math.sin(angle) * radius;
 
 		// End
 		dx = l.target.x - d1.x;
 		dy = l.target.y - d1.y;
 		angle = Math.atan2(dy, dx);
+
 		const ux = l.target.x - Math.cos(angle) * radius;
+
 		const uy = l.target.y - Math.sin(angle) * radius;
 
 		return (
@@ -639,6 +673,7 @@ class GraphView {
 				if (group.appliesToLabel && group.appliesToLabel === label) {
 					// This settings group is applicable to this vertex
 					const value = group[settingProperty];
+
 					if (value !== undefined && value !== null) {
 						return value;
 					}
@@ -648,8 +683,10 @@ class GraphView {
 			// Check for a default group with no appliesToLabel
 			const defaultGroup: VertexSettingsGroup =
 				vertextSettingsGroups.find((group) => !group.appliesToLabel);
+
 			if (defaultGroup) {
 				const value = defaultGroup[settingProperty];
+
 				if (value !== undefined && value !== null) {
 					return value;
 				}
@@ -662,6 +699,7 @@ class GraphView {
 		viewSettings: GraphViewSettings,
 	): string {
 		const color = this.findVertexPropertySetting(v, viewSettings, "color");
+
 		if (color && color !== AutoColor) {
 			return color;
 		}
@@ -675,6 +713,7 @@ class GraphView {
 		viewSettings: GraphViewSettings,
 	): string {
 		let text: string;
+
 		const propertyCandidates =
 			this.findVertexPropertySetting(
 				v,
@@ -690,8 +729,10 @@ class GraphView {
 			} else {
 				if (v.properties && candidate in v.properties) {
 					const property = v.properties[candidate][0];
+
 					if (property && property.value) {
 						text = property.value;
+
 						break;
 					}
 				}

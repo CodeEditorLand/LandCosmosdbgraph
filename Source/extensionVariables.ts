@@ -13,9 +13,14 @@ import { GraphViewsManager } from "./graph/GraphViewsManager";
  */
 export namespace ext {
 	export let ui: IAzureUserInput;
+
 	export let context: ExtensionContext;
+
 	export let outputChannel: IAzExtOutputChannel;
+
 	export let ignoreBundle: boolean | undefined;
+
 	export let graphViewsManager: GraphViewsManager;
+
 	export const prefix: string = "cosmosDB"; // Intentionally using same prefix as Cosmos DB to maintain backwards compatability of settings
 }

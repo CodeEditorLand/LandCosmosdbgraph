@@ -27,6 +27,7 @@ export class GraphViewServerSocket {
 		// TODO: use post message
 
 		// console.log("Message to client: " + message + " " + args.join(", "));
+
 		return this._socket.emit(message, ...args);
 	}
 

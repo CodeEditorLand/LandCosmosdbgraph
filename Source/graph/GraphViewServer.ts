@@ -159,6 +159,7 @@ export class GraphViewServer extends EventEmitter {
 		gremlinQuery: string,
 	): Promise<void> {
 		let results: GraphResults | undefined;
+
 		const start = Date.now();
 
 		try {
@@ -179,6 +180,7 @@ export class GraphViewServer extends EventEmitter {
 
 					context.telemetry.measurements.gremlinLength =
 						gremlinQuery.length;
+
 					const stepMatches = gremlinQuery.match(/[.]/g);
 					context.telemetry.measurements.approxGremlinSteps =
 						stepMatches ? stepMatches.length : 0;
@@ -192,9 +194,11 @@ export class GraphViewServer extends EventEmitter {
 					);
 					context.telemetry.measurements.mainQueryDuration =
 						(Date.now() - start) / 1000;
+
 					const edgesStart = Date.now();
 
 					const vertices = this.getVertices(fullResults);
+
 					const { limitedVertices, countUniqueVertices } =
 						this.limitVertices(vertices);
 					results = {
@@ -217,6 +221,7 @@ export class GraphViewServer extends EventEmitter {
 								queryId,
 								results.limitedVertices,
 							);
+
 							const { countUniqueEdges, limitedEdges } =
 								this.limitEdges(limitedVertices, edges);
 
@@ -243,6 +248,7 @@ export class GraphViewServer extends EventEmitter {
 			);
 			this._pageState.errorMessage = message;
 			this._socket.emitToClient("showQueryError", queryId, message);
+
 			return;
 		} finally {
 			this._pageState.isQueryRunning = false;
@@ -268,6 +274,7 @@ export class GraphViewServer extends EventEmitter {
 		limitedVertices: GraphVertex[];
 	} {
 		vertices = removeDuplicatesById(vertices);
+
 		const countUniqueVertices = vertices.length;
 
 		const limitedVertices = vertices.slice(0, this.maxVertices);
@@ -293,6 +300,7 @@ export class GraphViewServer extends EventEmitter {
 
 		// Enforce max limit on edges
 		const limitedEdges = edges.slice(0, this.maxEdges);
+
 		return { limitedEdges, countUniqueEdges };
 	}
 
@@ -306,10 +314,12 @@ export class GraphViewServer extends EventEmitter {
 		const maxIdListLength = 5000; // Liberal buffer, queries seem to start failing around 14,000 characters
 
 		const idLists: string[] = [];
+
 		let currentIdList = "";
 
 		for (const vertex of vertices) {
 			const vertexId = `"${vertex.id}"`;
+
 			if (
 				currentIdList.length &&
 				currentIdList.length + vertexId.length > maxIdListLength
@@ -329,13 +339,16 @@ export class GraphViewServer extends EventEmitter {
 		// Build queries from each list of IDs
 		// tslint:disable-next-line:no-any
 		const promises: Promise<any[]>[] = [];
+
 		for (const idList of idLists) {
 			const query = `g.V(${idList}).outE().dedup()`;
+
 			const promise = this.executeQuery(queryId, query);
 			promises.push(promise);
 		}
 
 		const results = await Promise.all(promises);
+
 		return Array.prototype.concat(...results);
 	}
 
@@ -344,6 +357,7 @@ export class GraphViewServer extends EventEmitter {
 		//    at Microsoft.Azure.Graphs.GremlinGroovy.GremlinGroovyTraversalScript.TranslateGroovyToCsharpInner()
 		try {
 			const match = message.match(/^\r?\n?\s*at \S+\(\)\s*$/m);
+
 			if (match) {
 				return message.slice(0, match.index);
 			}
@@ -406,6 +420,7 @@ export class GraphViewServer extends EventEmitter {
 		} else {
 			// We haven't figured out yet which endpoint actually works (if any - network could be down, etc.), so try them all
 			let firstValidError: {} = null;
+
 			for (const endpoint of this.configuration
 				.possibleGremlinEndpoints) {
 				try {
@@ -415,6 +430,7 @@ export class GraphViewServer extends EventEmitter {
 						endpoint,
 					);
 					this.configuration.gremlinEndpoint = endpoint;
+
 					return Promise.resolve(result);
 				} catch (err) {
 					if (err.code === "ENOTFOUND") {

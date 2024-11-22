@@ -31,19 +31,23 @@ export class GraphViewsManager implements IServerProvider {
 
 	public async showGraphViewer(config: IGraphConfiguration): Promise<void> {
 		let id: number;
+
 		try {
 			id = await this.getOrCreateServer(config);
 		} catch (err) {
 			vscode.window.showErrorMessage(parseError(err).message);
 		}
 		const existingPanel: vscode.WebviewPanel = this._panels.get(id);
+
 		if (existingPanel) {
 			existingPanel.reveal();
+
 			return;
 		}
 		const column = vscode.window.activeTextEditor
 			? vscode.window.activeTextEditor.viewColumn
 			: undefined;
+
 		const options: vscode.WebviewOptions & vscode.WebviewPanelOptions = {
 			enableScripts: true,
 			enableCommandUris: true,
@@ -51,12 +55,14 @@ export class GraphViewsManager implements IServerProvider {
 			retainContextWhenHidden: true,
 			localResourceRoots: [vscode.Uri.file(ext.context.extensionPath)],
 		};
+
 		const panel = vscode.window.createWebviewPanel(
 			this._panelViewType,
 			config.tabTitle,
 			{ viewColumn: column, preserveFocus: true },
 			options,
 		);
+
 		const contentProvider = new WebviewContentProvider(this);
 		panel.webview.html = await contentProvider.provideHtmlContent(
 			panel.webview,
@@ -83,6 +89,7 @@ export class GraphViewsManager implements IServerProvider {
 		config: IGraphConfiguration,
 	): Promise<number> {
 		let existingServer: GraphViewServer = null;
+
 		let existingId: number;
 		this._servers.forEach((svr, key) => {
 			if (areConfigsEqual(svr.configuration, config)) {
@@ -90,6 +97,7 @@ export class GraphViewsManager implements IServerProvider {
 				existingId = key;
 			}
 		});
+
 		if (existingServer) {
 			return existingId;
 		}
@@ -98,8 +106,10 @@ export class GraphViewsManager implements IServerProvider {
 		await server.start();
 
 		this._lastServerId += 1;
+
 		const id = this._lastServerId;
 		this._servers.set(id, server);
+
 		return id;
 	}
 }
@@ -114,7 +124,9 @@ class WebviewContentProvider {
 		serverId: number,
 	): Promise<string> {
 		console.assert(serverId > 0);
+
 		const server = this._serverProvider.findServerById(serverId);
+
 		if (server) {
 			return await this._graphClientHtmlAsString(webview, server.port);
 		}
@@ -131,13 +143,17 @@ class WebviewContentProvider {
 			"graphClient",
 			"graphClient.html",
 		);
+
 		let htmlContents: string = await fse.readFile(
 			graphClientAbsolutePath,
 			"utf8",
 		);
+
 		const portPlaceholder: RegExp = /\$CLIENTPORT/g;
 		htmlContents = htmlContents.replace(portPlaceholder, String(port));
+
 		const uriPlaceholder: RegExp = /\$BASEURI/g;
+
 		const baseUri = webview.asWebviewUri(
 			vscode.Uri.file(ext.context.extensionPath),
 		);
