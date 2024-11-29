@@ -29,14 +29,18 @@ export async function activateInternal(
 	ignoreBundle?: boolean,
 ): Promise<AzureExtensionApiProvider> {
 	ext.context = context;
+
 	ext.ignoreBundle = ignoreBundle;
+
 	ext.ui = new AzureUserInput(context.globalState);
 
 	ext.outputChannel = createAzExtOutputChannel(
 		"Azure Cosmos DB Graph",
 		ext.prefix,
 	);
+
 	context.subscriptions.push(ext.outputChannel);
+
 	registerUIExtensionVariables(ext);
 
 	// tslint:disable-next-line: max-func-body-length
@@ -44,6 +48,7 @@ export async function activateInternal(
 		"cosmosDBGraph.activate",
 		async (activateContext: IActionContext) => {
 			activateContext.telemetry.properties.isActivationEvent = "true";
+
 			activateContext.telemetry.measurements.mainFileLoad =
 				(perfStats.loadEndTime - perfStats.loadStartTime) / 1000;
 

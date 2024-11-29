@@ -44,15 +44,25 @@ const AutoColor = "auto";
 
 let htmlElements: {
 	debugLog: HTMLTextAreaElement;
+
 	graphRadio: HTMLInputElement;
+
 	graphSection: HTMLDivElement;
+
 	jsonRadio: HTMLInputElement;
+
 	jsonResults: HTMLTextAreaElement;
+
 	jsonSection: HTMLDivElement;
+
 	queryError: HTMLTextAreaElement;
+
 	queryInput: HTMLInputElement;
+
 	stats: HTMLSpanElement;
+
 	title: HTMLElement;
+
 	resultsBackground: HTMLDivElement;
 };
 
@@ -81,18 +91,23 @@ function logToUI(s: string) {
 
 interface ForceNode {
 	vertex: GraphVertex;
+
 	x: number;
+
 	y: number;
 }
 
 interface ForceLink {
 	edge: GraphEdge;
+
 	source: ForceNode;
+
 	target: ForceNode;
 }
 
 interface Point2D {
 	x: number;
+
 	y: number;
 }
 
@@ -109,6 +124,7 @@ class SocketWrapper {
 				fn(...args);
 			} catch (err) {
 				this.emitToHost("log", getErrorMessage(err));
+
 				logToUI(err);
 			}
 		});
@@ -127,8 +143,11 @@ class SocketWrapper {
 // tslint:disable-next-line: export-name
 export class GraphClient {
 	private _socket: SocketWrapper;
+
 	private _currentQueryId = 0;
+
 	private _isGraphView: boolean;
+
 	private _graphView: GraphView;
 
 	constructor(port: number) {
@@ -164,6 +183,7 @@ export class GraphClient {
 
 		this._socket.onServerMessage("connect", (): void => {
 			this.log(`Client connected on port ${port}`);
+
 			this._socket.emitToHost("getTitle");
 		});
 
@@ -178,6 +198,7 @@ export class GraphClient {
 
 				if (pageState.isQueryRunning) {
 					this._currentQueryId = pageState.runningQueryId;
+
 					this.setStateQuerying();
 
 					return;
@@ -199,6 +220,7 @@ export class GraphClient {
 
 		this._socket.onServerMessage("setTitle", (title: string): void => {
 			this.log(`Received title: ${title}`);
+
 			d3.select(htmlElements.title).text(title);
 		});
 
@@ -251,6 +273,7 @@ export class GraphClient {
 
 	public query(gremlin: string) {
 		this._currentQueryId += 1;
+
 		this._socket.emitToHost("query", this._currentQueryId, gremlin);
 
 		this.setStateQuerying();
@@ -258,11 +281,13 @@ export class GraphClient {
 
 	public selectGraphView() {
 		this._isGraphView = true;
+
 		this.setView();
 	}
 
 	public selectJsonView() {
 		this._isGraphView = false;
+
 		this.setView();
 	}
 
@@ -272,6 +297,7 @@ export class GraphClient {
 
 	private selectById<T extends HTMLElement>(id: string): T {
 		const elem = <T>d3.select(`#${id}`)[0][0];
+
 		console.assert(!!elem, `Could not find element with ID ${id}`);
 
 		return elem;
@@ -280,15 +306,19 @@ export class GraphClient {
 	// Tells the host which view is selected (Json/Graph/etc)
 	private setView() {
 		htmlElements.graphRadio.checked = this._isGraphView;
+
 		htmlElements.jsonRadio.checked = !this._isGraphView;
+
 		d3.select(htmlElements.graphSection).classed(
 			"active",
 			!!this._isGraphView,
 		);
+
 		d3.select(htmlElements.jsonSection).classed(
 			"active",
 			!this._isGraphView,
 		);
+
 		this._socket.emitToHost(
 			"setView",
 			this._isGraphView ? "graph" : "json",
@@ -309,12 +339,15 @@ export class GraphClient {
 
 	private setStateQuerying() {
 		this._setState("querying");
+
 		this._graphView.clear();
 	}
 
 	private setStateError(error: any) {
 		htmlElements.queryError.value = getErrorMessage(error);
+
 		this._setState("error");
+
 		this._graphView.clear();
 	}
 
@@ -370,6 +403,7 @@ export class GraphClient {
 			this._setState("json-results");
 		} else {
 			this._setState("graph-results");
+
 			this._graphView.display(
 				results.countUniqueVertices,
 				results.limitedVertices,
@@ -383,7 +417,9 @@ export class GraphClient {
 
 class GraphView {
 	private _force: any;
+
 	private _defaultColorsPerLabel = new Map<string, string>();
+
 	private _colorGenerator: (i: number) => string = d3.scale.category20();
 
 	private static calculateClosestPIOver2(angle: number): number {
@@ -430,6 +466,7 @@ class GraphView {
 		viewSettings: GraphViewSettings,
 	) {
 		this.clear();
+
 		this.generateDefaultColors(vertices);
 
 		// Set up nodes and links for the force simulation
@@ -439,10 +476,12 @@ class GraphView {
 
 		// Create map of nodes by ID
 		let nodesById = new Map<string, ForceNode>();
+
 		nodes.forEach((n) => nodesById.set(n.vertex.id, n));
 
 		// Create edges and set their source/target
 		const links: ForceLink[] = [];
+
 		edges.forEach((e) => {
 			const source = nodesById.get(e.outV);
 
@@ -454,6 +493,7 @@ class GraphView {
 				console.error("Vertex not found");
 			}
 		});
+
 		nodesById = null;
 
 		const statsText: string =
@@ -461,12 +501,14 @@ class GraphView {
 			links.length === countUniqueEdges
 				? `Displaying all ${nodes.length} vertices and ${links.length} edges`
 				: `Displaying ${nodes.length} of ${countUniqueVertices} vertices and ${links.length} of ${countUniqueEdges} edges`;
+
 		d3.select(htmlElements.stats).text(statsText);
 
 		// Set up force simulation
 		if (this._force) {
 			this._force.stop();
 		}
+
 		this._force = d3.layout
 			.force()
 			.size([
@@ -622,6 +664,7 @@ class GraphView {
 				const colorIndex = this._defaultColorsPerLabel.size;
 
 				const newColor = this._colorGenerator(colorIndex);
+
 				this._defaultColorsPerLabel.set(label, newColor);
 			}
 		}
@@ -645,7 +688,9 @@ class GraphView {
 
 		// End
 		dx = l.target.x - d1.x;
+
 		dy = l.target.y - d1.y;
+
 		angle = Math.atan2(dy, dx);
 
 		const ux = l.target.x - Math.cos(angle) * radius;
@@ -747,6 +792,7 @@ class GraphView {
 			viewSettings,
 			"showLabel",
 		);
+
 		showLabel = showLabel === undefined ? true : showLabel; // Default to true if not specified
 		if (showLabel && v.label) {
 			text += ` (${v.label})`;

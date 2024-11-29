@@ -12,29 +12,38 @@
 interface GraphResults {
 	// tslint:disable-next-line:no-any
 	fullResults: any[];
+
 	countUniqueVertices: number;
+
 	countUniqueEdges: number;
 
 	// Limited by max
 	limitedVertices: GraphVertex[];
+
 	limitedEdges: GraphEdge[];
 }
 
 interface GraphEdge {
 	id: string;
+
 	type: "edge";
+
 	outV: string; // Edge source ID
 	inV: string; // Edge target ID
 }
 
 interface GraphVertex {
 	id: string;
+
 	type: "vertex";
+
 	label: string;
+
 	properties: {
 		[key: string]: [
 			{
 				id: string;
+
 				value: string;
 			},
 		];
@@ -43,8 +52,11 @@ interface GraphVertex {
 
 interface VertexSettingsGroup {
 	appliesToLabel: string;
+
 	displayProperty?: string[];
+
 	color?: string;
+
 	showLabel?: boolean;
 }
 
@@ -56,10 +68,15 @@ type GraphViewSettings = GraphSettingsGroup[];
 
 interface PageState {
 	query: string | undefined;
+
 	results: GraphResults | undefined;
+
 	errorMessage: string | undefined;
+
 	view: "graph" | "json";
+
 	isQueryRunning: boolean;
+
 	runningQueryId: number;
 }
 

@@ -51,13 +51,18 @@ function truncateQuery(query: string) {
  */
 export class GraphViewServer extends EventEmitter {
 	private _server: io.Server;
+
 	private _httpServer: http.Server;
+
 	private _port: number | undefined;
+
 	private _socket: GraphViewServerSocket;
+
 	private _pageState: PageState;
 
 	constructor(private _configuration: IGraphConfiguration) {
 		super();
+
 		this._pageState = {
 			query: undefined,
 			results: undefined,
@@ -75,14 +80,19 @@ export class GraphViewServer extends EventEmitter {
 	public dispose() {
 		if (this._socket) {
 			this._socket.disconnect();
+
 			this._socket = null;
 		}
+
 		if (this._httpServer) {
 			this._httpServer.close();
+
 			this._httpServer = null;
 		}
+
 		if (this._server) {
 			this._server.close();
+
 			this._server = null;
 		}
 	}
@@ -103,21 +113,27 @@ export class GraphViewServer extends EventEmitter {
 		// how know resolve/reject?
 		return new Promise((resolve, _reject) => {
 			this._httpServer = http.createServer();
+
 			this._httpServer.listen(
 				0, // dynamnically pick an unused port
 				() => {
 					this._port = (<AddressInfo>this._httpServer.address()).port;
+
 					console.log(
 						`** GraphViewServer listening to port ${this._port} for ${this.configuration.gremlinEndpoint ? this.configuration.gremlinEndpoint.host : this.configuration.documentEndpoint}/${this._configuration.databaseName}/${this._configuration.graphName}`,
 					);
+
 					resolve();
 				},
 			);
+
 			this._server = io(this._httpServer);
 
 			this._server.on("connection", (socket) => {
 				this.log(`Connected to client ${socket.id}`);
+
 				this._socket = new GraphViewServerSocket(socket);
+
 				this.setUpSocket();
 			});
 
@@ -167,6 +183,7 @@ export class GraphViewServer extends EventEmitter {
 				"cosmosDB.gremlinQuery",
 				async (context: IActionContext) => {
 					context.errorHandling.rethrow = true;
+
 					context.errorHandling.suppressDisplay = true;
 
 					this._pageState = {
@@ -182,8 +199,10 @@ export class GraphViewServer extends EventEmitter {
 						gremlinQuery.length;
 
 					const stepMatches = gremlinQuery.match(/[.]/g);
+
 					context.telemetry.measurements.approxGremlinSteps =
 						stepMatches ? stepMatches.length : 0;
+
 					context.telemetry.properties.isDefaultQuery =
 						gremlinQuery === "g.V()" ? "true" : "false";
 
@@ -192,6 +211,7 @@ export class GraphViewServer extends EventEmitter {
 						queryId,
 						gremlinQuery,
 					);
+
 					context.telemetry.measurements.mainQueryDuration =
 						(Date.now() - start) / 1000;
 
@@ -201,6 +221,7 @@ export class GraphViewServer extends EventEmitter {
 
 					const { limitedVertices, countUniqueVertices } =
 						this.limitVertices(vertices);
+
 					results = {
 						fullResults,
 						countUniqueVertices: countUniqueVertices,
@@ -208,10 +229,13 @@ export class GraphViewServer extends EventEmitter {
 						countUniqueEdges: 0, // Fill in later
 						limitedEdges: [], // Fill in later
 					};
+
 					context.telemetry.measurements.countUniqueVertices =
 						countUniqueVertices;
+
 					context.telemetry.measurements.limitedVertices =
 						limitedVertices.length;
+
 					this._pageState.results = results;
 
 					if (results.limitedVertices.length) {
@@ -226,11 +250,15 @@ export class GraphViewServer extends EventEmitter {
 								this.limitEdges(limitedVertices, edges);
 
 							results.countUniqueEdges = countUniqueEdges;
+
 							results.limitedEdges = limitedEdges;
+
 							context.telemetry.measurements.countUniqueEdges =
 								countUniqueEdges;
+
 							context.telemetry.measurements.limitedEdges =
 								limitedEdges.length;
+
 							context.telemetry.measurements.edgesQueryDuration =
 								(Date.now() - edgesStart) / 1000;
 						} catch (edgesError) {
@@ -246,7 +274,9 @@ export class GraphViewServer extends EventEmitter {
 			const message = this.removeErrorCallStack(
 				error.message || error.toString(),
 			);
+
 			this._pageState.errorMessage = message;
+
 			this._socket.emitToClient("showQueryError", queryId, message);
 
 			return;
@@ -271,6 +301,7 @@ export class GraphViewServer extends EventEmitter {
 
 	private limitVertices(vertices: GraphVertex[]): {
 		countUniqueVertices: number;
+
 		limitedVertices: GraphVertex[];
 	} {
 		vertices = removeDuplicatesById(vertices);
@@ -290,7 +321,9 @@ export class GraphViewServer extends EventEmitter {
 
 		// Remove edges that don't have both source and target in our vertex list
 		const verticesById = new Map<string, GraphVertex>();
+
 		vertices.forEach((n) => verticesById.set(n.id, n));
+
 		edges = edges.filter((e) => {
 			return verticesById.has(e.inV) && verticesById.has(e.outV);
 		});
@@ -326,12 +359,15 @@ export class GraphViewServer extends EventEmitter {
 			) {
 				// Start a new id list
 				idLists.push(currentIdList);
+
 				currentIdList = "";
 			}
+
 			currentIdList =
 				(currentIdList ? currentIdList + "," : currentIdList) +
 				vertexId;
 		}
+
 		if (currentIdList.length) {
 			idLists.push(currentIdList);
 		}
@@ -344,6 +380,7 @@ export class GraphViewServer extends EventEmitter {
 			const query = `g.V(${idList}).outE().dedup()`;
 
 			const promise = this.executeQuery(queryId, query);
+
 			promises.push(promise);
 		}
 
@@ -387,6 +424,7 @@ export class GraphViewServer extends EventEmitter {
 						`Retry #${iTry - 1} for query ${queryId}: ${truncateQuery(gremlinQuery)}`,
 					);
 				}
+
 				return await this._executeQueryCore(queryId, gremlinQuery);
 			} catch (err) {
 				if (this.isErrorRetryable(err)) {
@@ -429,6 +467,7 @@ export class GraphViewServer extends EventEmitter {
 						gremlinQuery,
 						endpoint,
 					);
+
 					this.configuration.gremlinEndpoint = endpoint;
 
 					return Promise.resolve(result);
@@ -471,10 +510,12 @@ export class GraphViewServer extends EventEmitter {
 
 		// Patch up handleProtocolMessage as a temporary work-around for https://github.com/jbmusso/gremlin-javascript/issues/93
 		const originalHandleProtocolMessage = client.handleProtocolMessage;
+
 		client.handleProtocolMessage = function handleProtocolMessage(message) {
 			if (!message.binary) {
 				// originalHandleProtocolMessage isn't handling non-binary messages, so convert this one back to binary
 				message.data = Buffer.from(message.data);
+
 				message.binary = true;
 			}
 
@@ -482,6 +523,7 @@ export class GraphViewServer extends EventEmitter {
 		};
 
 		let socketError: { message?: string };
+
 		client.on("error", handleError);
 
 		function handleError(err) {
@@ -497,15 +539,18 @@ export class GraphViewServer extends EventEmitter {
 						"Gremlin communication error: ",
 						socketError.message || socketError.toString(),
 					);
+
 					reject(socketError);
 				} else if (err) {
 					this.log(
 						"Error from gremlin server: ",
 						err.message || err.toString(),
 					);
+
 					reject(err);
 				} else {
 					this.log("Results from gremlin", results);
+
 					resolve(results);
 				}
 			});
@@ -549,11 +594,13 @@ export class GraphViewServer extends EventEmitter {
 
 	private handleSetQuery(query: string) {
 		this.log("setQuery");
+
 		this._pageState.query = query;
 	}
 
 	private handleSetView(view: "graph" | "json") {
 		this.log("setView");
+
 		this._pageState.view = view;
 	}
 
@@ -568,6 +615,7 @@ export class GraphViewServer extends EventEmitter {
 
 	private handleGetTitleMessage() {
 		this.log(`getTitle`);
+
 		this._socket.emitToClient(
 			"setTitle",
 			`${this._configuration.databaseName} / ${this._configuration.graphName}`,

@@ -37,6 +37,7 @@ export class GraphViewsManager implements IServerProvider {
 		} catch (err) {
 			vscode.window.showErrorMessage(parseError(err).message);
 		}
+
 		const existingPanel: vscode.WebviewPanel = this._panels.get(id);
 
 		if (existingPanel) {
@@ -44,6 +45,7 @@ export class GraphViewsManager implements IServerProvider {
 
 			return;
 		}
+
 		const column = vscode.window.activeTextEditor
 			? vscode.window.activeTextEditor.viewColumn
 			: undefined;
@@ -64,20 +66,27 @@ export class GraphViewsManager implements IServerProvider {
 		);
 
 		const contentProvider = new WebviewContentProvider(this);
+
 		panel.webview.html = await contentProvider.provideHtmlContent(
 			panel.webview,
 			id,
 		);
+
 		this._panels.set(id, panel);
+
 		panel.onDidDispose(
 			// dispose the server
 			() => {
 				const server = this._servers.get(id);
+
 				server.dispose();
+
 				this._servers.delete(id);
+
 				this._panels.delete(id);
 			},
 		);
+
 		panel.reveal();
 	}
 
@@ -91,9 +100,11 @@ export class GraphViewsManager implements IServerProvider {
 		let existingServer: GraphViewServer = null;
 
 		let existingId: number;
+
 		this._servers.forEach((svr, key) => {
 			if (areConfigsEqual(svr.configuration, config)) {
 				existingServer = svr;
+
 				existingId = key;
 			}
 		});
@@ -103,11 +114,13 @@ export class GraphViewsManager implements IServerProvider {
 		}
 
 		const server = new GraphViewServer(config);
+
 		await server.start();
 
 		this._lastServerId += 1;
 
 		const id = this._lastServerId;
+
 		this._servers.set(id, server);
 
 		return id;
@@ -150,6 +163,7 @@ class WebviewContentProvider {
 		);
 
 		const portPlaceholder: RegExp = /\$CLIENTPORT/g;
+
 		htmlContents = htmlContents.replace(portPlaceholder, String(port));
 
 		const uriPlaceholder: RegExp = /\$BASEURI/g;
@@ -157,6 +171,7 @@ class WebviewContentProvider {
 		const baseUri = webview.asWebviewUri(
 			vscode.Uri.file(ext.context.extensionPath),
 		);
+
 		htmlContents = htmlContents.replace(uriPlaceholder, baseUri.toString());
 
 		return htmlContents;
