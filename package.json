@@ -1,6 +1,16 @@
 {
-	"activationEvents": [],
-	"aiKey": "AIF-d9b70cd4-b9f9-4d70-929b-a071c400b217",
+	"name": "@codeeditorland/cosmosdbgraph",
+	"displayName": "Azure Cosmos DB Graph (deprecated)",
+	"description": "View Cosmos DB Graph databases in Azure.",
+	"main": "./main",
+	"scripts": {
+		"all": "npm i && npm run lint && npm test",
+		"build": "tsc",
+		"compile": "tsc -watch",
+		"webpack": "npm run build && gulp webpack-dev",
+		"webpack-prod": "npm run build && gulp webpack-prod",
+		"webpack-profile": "webpack --profile --json --mode production > webpack-stats.json && echo Use http://webpack.github.io/analyse to analyze the stats"
+	},
 	"contributes": {
 		"commands": [],
 		"configuration": {
@@ -85,6 +95,7 @@
 			"title": "Cosmos DB"
 		}
 	},
+	"activationEvents": [],
 	"dependencies": {
 		"d3": "7.9.0",
 		"fs-extra": "11.2.0",
@@ -92,7 +103,6 @@
 		"socket.io": "4.8.1",
 		"socket.io-client": "4.8.1"
 	},
-	"description": "View Cosmos DB Graph databases in Azure.",
 	"devDependencies": {
 		"@types/d3": "7.4.3",
 		"@types/fs-extra": "11.0.4",
@@ -101,25 +111,15 @@
 		"@types/socket.io-client": "3.0.0",
 		"glob": "11.0.0"
 	},
-	"displayName": "Azure Cosmos DB Graph (deprecated)",
 	"extensionDependencies": [
 		"ms-azuretools.vscode-cosmosdb",
 		"ms-vscode.azure-account"
 	],
+	"icon": "resources/cosmos.png",
 	"galleryBanner": {
 		"color": "#3c3c3c",
 		"theme": "dark"
 	},
-	"icon": "resources/cosmos.png",
-	"main": "./main",
-	"name": "@codeeditorland/cosmosdbgraph",
 	"preview": true,
-	"scripts": {
-		"all": "npm i && npm run lint && npm test",
-		"build": "tsc",
-		"compile": "tsc -watch",
-		"webpack": "npm run build && gulp webpack-dev",
-		"webpack-prod": "npm run build && gulp webpack-prod",
-		"webpack-profile": "webpack --profile --json --mode production > webpack-stats.json && echo Use http://webpack.github.io/analyse to analyze the stats"
-	}
+	"aiKey": "AIF-d9b70cd4-b9f9-4d70-929b-a071c400b217"
 }
